@@ -1,10 +1,12 @@
-package main
+package main;
 
 import "fmt";
 import "os";
 import "strconv";
 //import "bufio"
 //import "io/ioutil"
+
+//import "github.com/faiface/pixel/pixelgl";
 
 func main() {
 	Render();
