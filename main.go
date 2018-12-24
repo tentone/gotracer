@@ -6,14 +6,14 @@ import "fmt";
 //import "bufio"
 //import "io/ioutil"
 
-import "gotracer/vector3";
+import "gotracer/math";
 //import "github.com/faiface/pixel/pixelgl";
 
 func main() {
 	//Render();
 
-	var a *vector3.Vector3 = vector3.New(1, 1, 1);
-	var b *vector3.Vector3 = vector3.New(1, 2, 3);
+	var a *math.Vector3 = math.NewVector3(1, 1, 1);
+	var b *math.Vector3 = math.NewVector3(1, 2, 3);
 	a.Add(b);
 
 	fmt.Println(b.ToString());
@@ -29,7 +29,6 @@ func Render() {
 	CheckError(err);
 
 	file.WriteString("P3\n" + strconv.Itoa(nx) + " " + strconv.Itoa(ny) + "\n255\n");
-	//fmt.Println("P3\n" + strconv.Itoa(nx) + " " + strconv.Itoa(ny) + "\n255\n");
 
 	for j := 0; j < ny; j++ {
 		for i := 0; i < nx; i++ {
@@ -44,7 +43,6 @@ func Render() {
 			var ib int = int(256 * b);
 
 			file.WriteString(strconv.Itoa(ir) + " " + strconv.Itoa(ig) + " " + strconv.Itoa(ib) + "\n");
-			//fmt.Println(strconv.Itoa(ir) + " " + strconv.Itoa(ig) + " " + strconv.Itoa(ib) + "\n");
 		}
 	}
 

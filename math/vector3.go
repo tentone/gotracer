@@ -1,4 +1,4 @@
-package vector3;
+package math;
 
 import "strconv";
 
@@ -8,7 +8,7 @@ type Vector3 struct {
 	z float64
 }
 
-func New(x float64, y float64, z float64) *Vector3 {
+func NewVector3(x float64, y float64, z float64) *Vector3 {
 	var v = new(Vector3)
 	v.x = x;
 	v.y = y;
