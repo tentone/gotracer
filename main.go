@@ -6,8 +6,10 @@ import "fmt";
 //import "bufio"
 //import "io/ioutil"
 
+//import "github.com/faiface/pixel/pixelgl";
+
 import "gotracer/math";
-import "github.com/faiface/pixel/pixelgl";
+
 
 func main() {
 	//Render();
