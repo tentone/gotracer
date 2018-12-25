@@ -9,21 +9,25 @@ import "fmt";
 //import "github.com/faiface/pixel/pixelgl";
 
 import "gotracer/math";
-
+import "gotracer/graphics";
 
 func main() {
-	//Render();
+	//Gradient
+	RenderGradient();
 
 	var a *math.Vector3 = math.NewVector3(1, 1, 1);
 	var b *math.Vector3 = math.NewVector3(1, 2, 3);
 	a.Add(b);
 
+	var frame = new(Frame);
+	fmt.Println(frame.ToString());
+
 	fmt.Println(b.ToString());
 	fmt.Println(a.ToString());
 }
 
-//Render the image
-func Render() {
+//RenderGradient the image
+func RenderGradient() {
 	var nx int = 640;
 	var ny int = 480;
 
