@@ -2,12 +2,12 @@ package math;
 
 //Ray is represented by an origin point A and a normalized direction vector B
 type Ray struct {
-	Origin Vector3;
-	Direction Vector3;
+	Origin *Vector3;
+	Direction *Vector3;
 }
 
 // Create new ray from origin point and direction
-func NewRay(origin Vector3, direction Vector3) *Ray {
+func NewRay(origin *Vector3, direction *Vector3) *Ray {
 	var r = new(Ray)
 	r.Origin = origin;
 	r.Direction = direction;
@@ -18,7 +18,7 @@ func NewRay(origin Vector3, direction Vector3) *Ray {
 func (r *Ray) PointAtParameter(t float64) *Vector3 {
 	var v = r.Direction.Clone();
 	v.MulScalar(t);
-	v.Add(&r.Origin);
+	v.Add(r.Origin);
 
 	return v;
 }

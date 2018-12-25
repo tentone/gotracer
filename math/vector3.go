@@ -67,9 +67,10 @@ func (v *Vector3) Clone() *Vector3 {
 };
 
 // Create a new copy vector with a unit length vector with the same direction as this one.
-func (v Vector3) UnitVector() Vector3 {
-	v.DivideScalar(v.Length());
-	return v;
+func (v *Vector3) UnitVector() *Vector3 {
+	var unit = v.Clone();
+	unit.DivideScalar(v.Length());
+	return unit;
 }
 
 // Length of the vector
