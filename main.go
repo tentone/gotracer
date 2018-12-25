@@ -28,15 +28,9 @@ func main() {
 	//Gradient
 	//RenderGradient();
 
-	var a *math.Vector3 = math.NewVector3(1, 1, 1);
-	var b *math.Vector3 = math.NewVector3(1, 2, 3);
-	a.Add(b);
 
 	var frame = new(graphics.Frame);
 	fmt.Println(frame.ToString());
-
-	fmt.Println(b.ToString());
-	fmt.Println(a.ToString());
 }
 
 func SkyColor(r *math.Ray) *math.Vector3 {
@@ -54,14 +48,18 @@ func SkyColor(r *math.Ray) *math.Vector3 {
 	return a;
 }
 
+func HitSphere(center *math.Vector3, radius float64, ray *math.Ray) bool {
+	return false;
+}
+
 //Render sky with raytrace
 func RenderSky() {
 	var nx int = 200;
 	var ny int = 100;
 
 	var lowerLeftCorner = math.NewVector3(-2.0, -1.0, -1.0);
-	//var horizontal = math.NewVector3(4.0, 0.0, 0.0);
-	//var vertical = math.NewVector3(0.0, 2.0, 0.0);
+	var horizontal = math.NewVector3(4.0, 0.0, 0.0);
+	var vertical = math.NewVector3(0.0, 2.0, 0.0);
 	var origin = math.NewVector3(0.0, 0.0, 0.0);
 
 	var file, err = os.Create("sky.ppm");
@@ -72,10 +70,18 @@ func RenderSky() {
 	for j := 0; j < ny; j++ {
 		for i := 0; i < nx; i++ {
 
-			//var u = float64(i) / float64(nx);
-			//var v = float64(j) / float64(ny);
+			var u = float64(i) / float64(nx);
+			var v = float64(j) / float64(ny);
+
+			var hor = horizontal.Clone();
+			hor.MulScalar(u);
+
+			var vert = vertical.Clone();
+			vert.MulScalar(v);
 
 			var direction = lowerLeftCorner.Clone();
+			direction.Add(hor);
+			direction.Add(vert);
 
 			var ray = math.NewRay(origin, direction);
 
@@ -97,8 +103,8 @@ func RenderSky() {
 
 //RenderGradient the image
 func RenderGradient() {
-	var nx int = 640;
-	var ny int = 480;
+	var nx int = 200;
+	var ny int = 100;
 
 	var file, err = os.Create("gradient.ppm");
 	CheckError(err);
