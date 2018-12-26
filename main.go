@@ -28,12 +28,16 @@ func main() {
 	//Gradient
 	//RenderGradient();
 
-
-	var frame = new(graphics.Frame);
+	var frame = graphics.NewFrame(640, 480);
 	fmt.Println(frame.ToString());
 }
 
-func SkyColor(r *math.Ray) *math.Vector3 {
+func GetColor(r *math.Ray) *math.Vector3 {
+
+	if(HitSphere(math.NewVector3(0.0, 0.0, -1.0), 0.5, r)) {
+		return math.NewVector3(1.0, 0.0, 0.0);
+	}
+
 	var unitDirection = r.Direction.UnitVector();
 	var t = 0.5 * (unitDirection.Y + 1.0);
 
@@ -49,7 +53,17 @@ func SkyColor(r *math.Ray) *math.Vector3 {
 }
 
 func HitSphere(center *math.Vector3, radius float64, ray *math.Ray) bool {
-	return false;
+	var oc = ray.Origin.Clone();
+	oc.Sub(center);
+
+	//var a = Dot(ray.Direction ray.Direction);
+	//var b = 2.0 * Dot(oc, r.Direction);
+	//var c = Dot(oc, oc) - radius * radius;
+	//var discriminant = b * b - 4 * a * c;
+
+	var discriminant = 0;
+
+	return discriminant > 0;
 }
 
 //Render sky with raytrace
@@ -86,7 +100,7 @@ func RenderSky() {
 			var ray = math.NewRay(origin, direction);
 
 			//Calculate color
-			var color = SkyColor(ray);
+			var color = GetColor(ray);
 
 			var ir int = int(256 * color.X);
 			var ig int = int(256 * color.Y);
