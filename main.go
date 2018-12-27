@@ -2,36 +2,76 @@ package main;
 
 import "os";
 import "strconv";
-import "fmt";
+//import "fmt";
 import "math";
 //import "bufio"
 //import "io/ioutil"
 
-//import "github.com/faiface/pixel/pixelgl";
+import "github.com/faiface/pixel";
+import "github.com/faiface/pixel/pixelgl";
+import "golang.org/x/image/colornames";
 
 import "gotracer/vmath";
-import "gotracer/graphics";
+//import "gotracer/graphics";
 //import "gotracer/hitable";
 
-func main() {
-	//Create window
-	//var config = new(pixelgl.WindowConfig);
-	//config.Resizable = true;
-	//config.Undecorated = false;
-	//config.VSync = false;
-	//config.Title = "Gotracer";
+func run() {
+	var width = 640;
+	var height = 480;
 
-	//var bounds = new(pixelgl);
-	//config.Bounds = ;
+	var bounds = pixel.R(0, 0, float64(width), float64(height));
+
+	var config = pixelgl.WindowConfig{
+		Resizable: false,
+		Undecorated: false,
+		VSync: false,
+		Title: "Gotracer",
+		Bounds: bounds};
+
+	var window, err = pixelgl.NewWindow(config);
+	
+	CheckError(err);
+
+	window.Clear(colornames.Black);
+
+	var picture = pixel.MakePictureData(bounds);
+
+	var a uint8 = 0;
+
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			var index = picture.Index(pixel.Vec{X:float64(x), Y:float64(y)});
+			picture.Pix[index].R = a;
+			picture.Pix[index].G = a;
+			picture.Pix[index].B = a;
+		}
+		
+		a++;
+		if a > 255 {
+			a = 0;
+		}
+
+	}
+
+	var sprite = pixel.NewSprite(picture, picture.Bounds());
+	sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()));
 
 	//First raytrace
 	RenderSky();
 
-	//Gradient
-	//RenderGradient();
+	for !window.Closed() {
+		window.Update()
+	}
+}
 
-	var frame = graphics.NewFrame(640, 480);
-	fmt.Println(frame.ToString());
+func main() {
+	//Create window
+
+
+	//var bounds = new(pixelgl);
+	//config.Bounds = ;
+
+	pixelgl.Run(run)
 }
 
 func GetColor(r *vmath.Ray) *vmath.Vector3 {
@@ -164,6 +204,31 @@ func RenderGradient() {
 	//Close file
 	file.Sync();
 	file.Close();
+}
+
+// Write the frame to a PPM file string
+func WritePPM(picture *pixel.PictureData, fname string) string {
+	
+	/*var file, err = os.Create("sky.ppm");
+	CheckError(err);
+
+	file.WriteString("P3\n" + strconv.Itoa(nx) + " " + strconv.Itoa(ny) + "\n255\n");
+
+	for j := 0; j < ny; j++ {
+		for i := 0; i < nx; i++ {
+			var ir int = int(255 * color.X);
+			var ig int = int(255 * color.Y);
+			var ib int = int(255 * color.Z);
+
+			file.WriteString(strconv.Itoa(ir) + " " + strconv.Itoa(ig) + " " + strconv.Itoa(ib) + "\n");
+		}
+	}
+
+	//Close file
+	file.Sync();
+	file.Close();*/
+
+	return "TODO";
 }
 
 //CheckError an error	

@@ -19,3 +19,5 @@
  - PixelGL
     - Used to create windows, output image and get key inputs
     - https://godoc.org/github.com/faiface/pixel/pixelgl
+    - https://github.com/faiface/pixel/wiki/Creating-a-Window
+    - https://godoc.org/github.com/faiface/pixel#PictureData
