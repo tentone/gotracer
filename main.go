@@ -37,7 +37,12 @@ func GetColor(r *vmath.Ray) *vmath.Vector3 {
 	var t = HitSphere(vmath.NewVector3(0.0, 0.0, -1.0), 0.5, r);
 
 	if(t > 0.0) {
-		return vmath.NewVector3(1.0, 0.0, 0.0);
+		var n = r.PointAtParameter(t);
+		n.Sub(vmath.NewVector3(0, 0, -1));
+		n.Normalize();
+		n.Add(vmath.NewVector3(1.0, 1.0, 1.0));
+		n.MulScalar(0.5);
+		return n;
 	}
 
 	var unitDirection = r.Direction.UnitVector();

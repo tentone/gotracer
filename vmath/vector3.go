@@ -61,6 +61,11 @@ func (v *Vector3) DivideScalar(b float64) {
 	v.Z /= b;
 }
 
+// Normalize this vector
+func (v *Vector3) Normalize() {
+	v.DivideScalar(v.Length());
+}
+
 // Return a copy of the vector
 func (v *Vector3) Clone() *Vector3 {
 	return NewVector3(v.X, v.Y, v.Z);

@@ -1,4 +1,4 @@
-package vmath;
+package object;
 
 //Sphere is represented by a center point and a radius-
 type Sphere struct {
