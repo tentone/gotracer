@@ -1,4 +1,4 @@
-package math;
+package vmath;
 
 import "strconv";
 import "math";
