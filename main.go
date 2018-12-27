@@ -11,6 +11,7 @@ import "math";
 
 import "gotracer/vmath";
 import "gotracer/graphics";
+//import "gotracer/hitable";
 
 func main() {
 	//Create window
