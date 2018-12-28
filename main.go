@@ -34,7 +34,7 @@ func run() {
 
 	window.Clear(colornames.Black);
 
-	var picture = pixel.MakePictureData(bounds);
+	/*var picture = pixel.MakePictureData(bounds);
 
 	var a uint8 = 0;
 
@@ -51,13 +51,12 @@ func run() {
 			a = 0;
 		}
 
-	}
+	}*/
+
+	var picture = Raytrace(bounds);
 
 	var sprite = pixel.NewSprite(picture, picture.Bounds());
-	sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()));
-
-	//First raytrace
-	RenderSky();
+	sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()));	
 
 	for !window.Closed() {
 		window.Update()
@@ -74,7 +73,7 @@ func main() {
 	pixelgl.Run(run)
 }
 
-func GetColor(r *vmath.Ray) *vmath.Vector3 {
+func CalculateColor(r *vmath.Ray) *vmath.Vector3 {
 	var t = HitSphere(vmath.NewVector3(0.0, 0.0, -1.0), 0.5, r);
 
 	if(t > 0.0) {
@@ -129,17 +128,26 @@ func Cross(result *vmath.Vector3, a *vmath.Vector3, b *vmath.Vector3) {
 }
 
 //Render sky with raytrace
-func RenderSky() {
-	var nx int = 200;
-	var ny int = 100;
+func Raytrace(bounds pixel.Rect) *pixel.PictureData {
+	var size = bounds.Size();
+	var nx int = int(size.X);
+	var ny int = int(size.Y);
 
 	var lowerLeftCorner = vmath.NewVector3(-2.0, -1.0, -1.0);
-	var horizontal = vmath.NewVector3(4.0, 0.0, 0.0);
-	var vertical = vmath.NewVector3(0.0, 2.0, 0.0);
+
+	var aspect = float64(nx / ny);
+	var scale = 2.0;
+
+	var vertical = vmath.NewVector3(0.0, scale, 0.0);
+	var horizontal = vmath.NewVector3(scale * aspect, 0.0, 0.0);
+	
 	var origin = vmath.NewVector3(0.0, 0.0, 0.0);
 
 	var file, err = os.Create("sky.ppm");
 	CheckError(err);
+
+	var picture = pixel.MakePictureData(bounds);
+
 
 	file.WriteString("P3\n" + strconv.Itoa(nx) + " " + strconv.Itoa(ny) + "\n255\n");
 
@@ -162,12 +170,19 @@ func RenderSky() {
 			var ray = vmath.NewRay(origin, direction);
 
 			//Calculate color
-			var color = GetColor(ray);
+			var color = CalculateColor(ray);
 
 			var ir int = int(255 * color.X);
 			var ig int = int(255 * color.Y);
 			var ib int = int(255 * color.Z);
 
+			//Write to picture
+			var index = picture.Index(pixel.Vec{X:float64(i), Y:float64(j)});
+			picture.Pix[index].R = uint8(ir);
+			picture.Pix[index].G = uint8(ig);
+			picture.Pix[index].B = uint8(ib);
+
+			//Write to file
 			file.WriteString(strconv.Itoa(ir) + " " + strconv.Itoa(ig) + " " + strconv.Itoa(ib) + "\n");
 		}
 	}
@@ -175,6 +190,8 @@ func RenderSky() {
 	//Close file
 	file.Sync();
 	file.Close();
+
+	return picture;
 }
 
 //RenderGradient the image
