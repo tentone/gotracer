@@ -15,6 +15,9 @@ import "gotracer/vmath";
 //import "gotracer/graphics";
 //import "gotracer/hitable";
 
+
+var origin = vmath.NewVector3(0.0, 0.0, 0.0);
+
 func run() {
 	var width = 640;
 	var height = 480;
@@ -32,44 +35,20 @@ func run() {
 	
 	CheckError(err);
 
-	window.Clear(colornames.Black);
-
-	/*var picture = pixel.MakePictureData(bounds);
-
-	var a uint8 = 0;
-
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
-			var index = picture.Index(pixel.Vec{X:float64(x), Y:float64(y)});
-			picture.Pix[index].R = a;
-			picture.Pix[index].G = a;
-			picture.Pix[index].B = a;
-		}
-		
-		a++;
-		if a > 255 {
-			a = 0;
-		}
-
-	}*/
-
-	var picture = Raytrace(bounds);
-
-	var sprite = pixel.NewSprite(picture, picture.Bounds());
-	sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()));	
-
 	for !window.Closed() {
+		
+		window.Clear(colornames.Black);
+
+		var picture = Raytrace(bounds);
+
+		var sprite = pixel.NewSprite(picture, picture.Bounds());
+		sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()));	
+
 		window.Update()
 	}
 }
 
 func main() {
-	//Create window
-
-
-	//var bounds = new(pixelgl);
-	//config.Bounds = ;
-
 	pixelgl.Run(run)
 }
 
@@ -130,32 +109,24 @@ func Cross(result *vmath.Vector3, a *vmath.Vector3, b *vmath.Vector3) {
 //Render sky with raytrace
 func Raytrace(bounds pixel.Rect) *pixel.PictureData {
 	var size = bounds.Size();
-	var nx int = int(size.X);
-	var ny int = int(size.Y);
-
-	var lowerLeftCorner = vmath.NewVector3(-2.0, -1.0, -1.0);
-
-	var aspect = float64(nx / ny);
+	var aspect = size.X / size.Y;
 	var scale = 2.0;
 
+	var lowerLeftCorner = vmath.NewVector3(-scale / 2.0 * aspect, -1.0, -1.0);
 	var vertical = vmath.NewVector3(0.0, scale, 0.0);
 	var horizontal = vmath.NewVector3(scale * aspect, 0.0, 0.0);
-	
-	var origin = vmath.NewVector3(0.0, 0.0, 0.0);
-
-	var file, err = os.Create("sky.ppm");
-	CheckError(err);
+	//var origin = vmath.NewVector3(0.0, 0.0, 0.0);
 
 	var picture = pixel.MakePictureData(bounds);
 
-
-	file.WriteString("P3\n" + strconv.Itoa(nx) + " " + strconv.Itoa(ny) + "\n255\n");
+	var nx int = int(size.X);
+	var ny int = int(size.Y);
 
 	for j := 0; j < ny; j++ {
 		for i := 0; i < nx; i++ {
 
-			var u = float64(i) / float64(nx);
-			var v = float64(j) / float64(ny);
+			var u = float64(i) / size.X;
+			var v = float64(j) / size.Y;
 
 			var hor = horizontal.Clone();
 			hor.MulScalar(u);
@@ -181,28 +152,19 @@ func Raytrace(bounds pixel.Rect) *pixel.PictureData {
 			picture.Pix[index].R = uint8(ir);
 			picture.Pix[index].G = uint8(ig);
 			picture.Pix[index].B = uint8(ib);
-
-			//Write to file
-			file.WriteString(strconv.Itoa(ir) + " " + strconv.Itoa(ig) + " " + strconv.Itoa(ib) + "\n");
 		}
 	}
-
-	//Close file
-	file.Sync();
-	file.Close();
 
 	return picture;
 }
 
 //RenderGradient the image
-func RenderGradient() {
-	var nx int = 200;
-	var ny int = 100;
+func RenderGradient(bounds pixel.Rect) *pixel.PictureData {
+	var size = bounds.Size();
+	var picture = pixel.MakePictureData(bounds);
 
-	var file, err = os.Create("gradient.ppm");
-	CheckError(err);
-
-	file.WriteString("P3\n" + strconv.Itoa(nx) + " " + strconv.Itoa(ny) + "\n255\n");
+	var nx int = int(size.X);
+	var ny int = int(size.Y);
 
 	for j := 0; j < ny; j++ {
 		for i := 0; i < nx; i++ {
@@ -210,42 +172,44 @@ func RenderGradient() {
 			//Calculate color
 			var color = vmath.NewVector3(float64(i) / float64(nx), float64(j) / float64(ny), 0.2);
 
-			var ir int = int(256 * color.X);
-			var ig int = int(256 * color.Y);
-			var ib int = int(256 * color.Z);
+			var ir int = int(255 * color.X);
+			var ig int = int(255 * color.Y);
+			var ib int = int(255 * color.Z);
 
-			file.WriteString(strconv.Itoa(ir) + " " + strconv.Itoa(ig) + " " + strconv.Itoa(ib) + "\n");
+			//Write to picture
+			var index = picture.Index(pixel.Vec{X:float64(i), Y:float64(j)});
+			picture.Pix[index].R = uint8(ir);
+			picture.Pix[index].G = uint8(ig);
+			picture.Pix[index].B = uint8(ib);
 		}
 	}
 
-	//Close file
-	file.Sync();
-	file.Close();
+	return picture;
 }
 
 // Write the frame to a PPM file string
-func WritePPM(picture *pixel.PictureData, fname string) string {
+func WritePPM(picture *pixel.PictureData, fname string) {
+	var size = picture.Rect.Size();
+
+	var nx int = int(size.X);
+	var ny int = int(size.Y);
 	
-	/*var file, err = os.Create("sky.ppm");
+	var file, err = os.Create("sky.ppm");
 	CheckError(err);
 
 	file.WriteString("P3\n" + strconv.Itoa(nx) + " " + strconv.Itoa(ny) + "\n255\n");
 
 	for j := 0; j < ny; j++ {
 		for i := 0; i < nx; i++ {
-			var ir int = int(255 * color.X);
-			var ig int = int(255 * color.Y);
-			var ib int = int(255 * color.Z);
-
-			file.WriteString(strconv.Itoa(ir) + " " + strconv.Itoa(ig) + " " + strconv.Itoa(ib) + "\n");
+			//Write to file
+			var index = picture.Index(pixel.Vec{X:float64(i), Y:float64(j)});
+			file.WriteString(strconv.Itoa(int(picture.Pix[index].R)) + " " + strconv.Itoa(int(picture.Pix[index].G)) + " " + strconv.Itoa(int(picture.Pix[index].B)) + "\n");
 		}
 	}
 
 	//Close file
 	file.Sync();
-	file.Close();*/
-
-	return "TODO";
+	file.Close();
 }
 
 //CheckError an error	
