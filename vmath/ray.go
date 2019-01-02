@@ -8,7 +8,7 @@ type Ray struct {
 
 // Create new ray from origin point and direction
 func NewRay(origin *Vector3, direction *Vector3) *Ray {
-	var r = new(Ray)
+	var r = new(Ray);
 	r.Origin = origin;
 	r.Direction = direction;
 	return r;

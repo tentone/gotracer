@@ -12,7 +12,7 @@ type Vector3 struct {
 
 // Create new vector3 with values.
 func NewVector3(x float64, y float64, z float64) *Vector3 {
-	var v = new(Vector3)
+	var v = new(Vector3);
 	v.X = x;
 	v.Y = y;
 	v.Z = z;

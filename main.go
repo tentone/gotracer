@@ -2,18 +2,13 @@ package main;
 
 import "os";
 import "strconv";
-//import "fmt";
 import "math";
-//import "bufio"
-//import "io/ioutil"
 
 import "github.com/faiface/pixel";
 import "github.com/faiface/pixel/pixelgl";
 import "golang.org/x/image/colornames";
 
 import "gotracer/vmath";
-//import "gotracer/graphics";
-//import "gotracer/hitable";
 
 
 var origin = vmath.NewVector3(0.0, 0.0, 0.0);
