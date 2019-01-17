@@ -153,7 +153,7 @@ func Raytrace(bounds pixel.Rect) *pixel.PictureData {
 	return picture;
 }
 
-//RenderGradient the image
+//Render a sample image with a gradient
 func RenderGradient(bounds pixel.Rect) *pixel.PictureData {
 	var size = bounds.Size();
 	var picture = pixel.MakePictureData(bounds);
