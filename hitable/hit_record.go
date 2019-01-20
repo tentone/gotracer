@@ -2,9 +2,9 @@ package hitable;
 
 import "gotracer/vmath";
 
-
+// Hit record indicates the intersection of a ray with a surface, indicates where the ray has colided.
 type HitRecord struct {
-	t float64;
-	p vmath.Vector3;
-	normal vmath.Vector3;
+	T float64;
+	P vmath.Vector3;
+	Normal vmath.Vector3;
 }
