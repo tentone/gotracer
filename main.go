@@ -9,9 +9,10 @@ import "github.com/faiface/pixel/pixelgl";
 import "golang.org/x/image/colornames";
 
 import "gotracer/vmath";
-
+import "gotracer/hitable";
 
 var origin = vmath.NewVector3(0.0, 0.0, 0.0);
+//var world hitable.HitableList;
 
 func run() {
 	var width = 640;
@@ -89,18 +90,6 @@ func HitSphere(center *vmath.Vector3, radius float64, ray *vmath.Ray) float64 {
 	}
 }
 
-//Dot product between two vectors
-func Dot(a *vmath.Vector3, b *vmath.Vector3) float64 {
-	return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
-}
-
-//Cross product between two vectors
-func Cross(result *vmath.Vector3, a *vmath.Vector3, b *vmath.Vector3) {
-	result.X = a.Y * b.Z - a.Z * b.Y;
-	result.Y = a.Z * b.X - a.X * b.Z;
-	result.Z = a.X * b.Y - a.Y * b.X;
-}
-
 //Render sky with raytrace
 func Raytrace(bounds pixel.Rect) *pixel.PictureData {
 	var size = bounds.Size();
@@ -110,8 +99,6 @@ func Raytrace(bounds pixel.Rect) *pixel.PictureData {
 	var lowerLeftCorner = vmath.NewVector3(-scale / 2.0 * aspect, -1.0, -1.0);
 	var vertical = vmath.NewVector3(0.0, scale, 0.0);
 	var horizontal = vmath.NewVector3(scale * aspect, 0.0, 0.0);
-	//var origin = vmath.NewVector3(0.0, 0.0, 0.0);
-
 	var picture = pixel.MakePictureData(bounds);
 
 	var nx int = int(size.X);
@@ -153,34 +140,18 @@ func Raytrace(bounds pixel.Rect) *pixel.PictureData {
 	return picture;
 }
 
-//Render a sample image with a gradient
-func RenderGradient(bounds pixel.Rect) *pixel.PictureData {
-	var size = bounds.Size();
-	var picture = pixel.MakePictureData(bounds);
-
-	var nx int = int(size.X);
-	var ny int = int(size.Y);
-
-	for j := 0; j < ny; j++ {
-		for i := 0; i < nx; i++ {
-
-			//Calculate color
-			var color = vmath.NewVector3(float64(i) / float64(nx), float64(j) / float64(ny), 0.2);
-
-			var ir int = int(255 * color.X);
-			var ig int = int(255 * color.Y);
-			var ib int = int(255 * color.Z);
-
-			//Write to picture
-			var index = picture.Index(pixel.Vec{X:float64(i), Y:float64(j)});
-			picture.Pix[index].R = uint8(ir);
-			picture.Pix[index].G = uint8(ig);
-			picture.Pix[index].B = uint8(ib);
-		}
-	}
-
-	return picture;
+//Dot product between two vectors
+func Dot(a *vmath.Vector3, b *vmath.Vector3) float64 {
+	return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
 }
+
+//Cross product between two vectors
+func Cross(result *vmath.Vector3, a *vmath.Vector3, b *vmath.Vector3) {
+	result.X = a.Y * b.Z - a.Z * b.Y;
+	result.Y = a.Z * b.X - a.X * b.Z;
+	result.Z = a.X * b.Y - a.Y * b.X;
+}
+
 
 // Write the frame to a PPM file string
 func WritePPM(picture *pixel.PictureData, fname string) {

@@ -19,6 +19,18 @@ func NewVector3(x float64, y float64, z float64) *Vector3 {
 	return v;
 }
 
+// Dot product between two vectors
+func Dot(a *Vector3, b *Vector3) float64 {
+	return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+}
+
+// Cross product between two vectors
+func Cross(result *Vector3, a *Vector3, b *Vector3) {
+	result.X = a.Y * b.Z - a.Z * b.Y;
+	result.Y = a.Z * b.X - a.X * b.Z;
+	result.Z = a.X * b.Y - a.Y * b.X;
+}
+
 // Add vectors
 func (v *Vector3) Add(b *Vector3) {
 	v.X += b.X;

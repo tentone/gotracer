@@ -14,9 +14,9 @@ func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, rec *HitRecord)
 	var oc = ray.Origin.Clone();
 	oc.Sub(s.Center);
 
-	var a = Dot(ray.Direction, ray.Direction);
-	var b = 2.0 * Dot(oc, ray.Direction);
-	var c = Dot(oc, oc) - s.Radius * s.Radius;
+	var a = vmath.Dot(ray.Direction, ray.Direction);
+	var b = 2.0 * vmath.Dot(oc, ray.Direction);
+	var c = vmath.Dot(oc, oc) - s.Radius * s.Radius;
 	var discriminant = b * b - a * c;
 
 	if(discriminant > 0) {
