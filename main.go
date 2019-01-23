@@ -9,7 +9,7 @@ import "github.com/faiface/pixel/pixelgl";
 import "golang.org/x/image/colornames";
 
 import "gotracer/vmath";
-import "gotracer/hitable";
+//import "gotracer/hitable";
 
 var origin = vmath.NewVector3(0.0, 0.0, 0.0);
 //var world hitable.HitableList;
@@ -51,7 +51,7 @@ func main() {
 func CalculateColor(r *vmath.Ray) *vmath.Vector3 {
 	var t = HitSphere(vmath.NewVector3(0.0, 0.0, -1.0), 0.5, r);
 
-	if(t > 0.0) {
+	if t > 0.0 {
 		var n = r.PointAtParameter(t);
 		n.Sub(vmath.NewVector3(0, 0, -1));
 		n.Normalize();
