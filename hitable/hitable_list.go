@@ -18,17 +18,17 @@ func (hl *HitableList) Hit(r *vmath.Ray, tmin float64, tmax float64, rec *HitRec
 
 	var hitAnything bool = false;
 	var closestSoFar float64 = tmax;
-	var tempRec *HitRecord;
+	var tempRec *HitRecord = NewHitRecord();
+	var i int = 0;
 
-	/*
-	for _, h := range hl.List {
-		if hit, hr := h.Hit(r, tmin, closestSoFar); hit {
+	for i < len(hl.List) {
+		if hl.List[i].Hit(r, tmin, closestSoFar, tempRec){
 			hitAnything = true;
-			rec = hr;
-			closestSoFar = hr.t;
+			closestSoFar = tempRec.T;
+			rec = tempRec;
 		}
+		i++;
 	}
-	*/
-	
+
 	return hitAnything;
 }

@@ -19,12 +19,12 @@ func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, rec *HitRecord)
 	var c = vmath.Dot(oc, oc) - s.Radius * s.Radius;
 	var discriminant = b * b - a * c;
 
-	if(discriminant > 0) {
+	if discriminant > 0 {
 
 		//First root result
 		var temp float64 = (-b - math.Sqrt(discriminant)) / a;
 
-		if(temp < tmax && temp > tmin) {
+		if temp < tmax && temp > tmin {
 			rec.T = temp;
 			rec.P = ray.PointAtParameter(temp);
 			rec.Normal = rec.P.Clone();
@@ -36,7 +36,7 @@ func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, rec *HitRecord)
 		//Second root result
 		temp = (-b + math.Sqrt(discriminant)) / a;
 		
-		if(temp < tmax && temp > tmin) {
+		if temp < tmax && temp > tmin {
 			rec.T = temp;
 			rec.P = ray.PointAtParameter(temp);
 			rec.Normal = rec.P.Clone();

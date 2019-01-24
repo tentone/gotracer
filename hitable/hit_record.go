@@ -8,3 +8,8 @@ type HitRecord struct {
 	P *vmath.Vector3;
 	Normal *vmath.Vector3;
 }
+
+// Create new hitable list
+func NewHitRecord() *HitRecord {
+	return new(HitRecord);
+}
