@@ -9,6 +9,14 @@ type Sphere struct {
 	Center *vmath.Vector3;
 }
 
+// Create new hitable list
+func NewSphere(r float64, c *vmath.Vector3) *Sphere {
+	var s = new(Sphere)
+	s.Radius = r;
+	s.Center = c;
+	return s;
+}
+
 func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, rec *HitRecord) bool {
 
 	var oc = ray.Origin.Clone();

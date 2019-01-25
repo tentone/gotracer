@@ -13,6 +13,11 @@ func NewHitableList() *HitableList {
 	return new(HitableList);
 }
 
+// Add a hitable element to the list
+func (hl *HitableList) Add(h Hitable) {
+	hl.List = append(hl.List, h);
+}
+
 // Hit iterates and tests all hitable object in the list.
 func (hl *HitableList) Hit(r *vmath.Ray, tmin float64, tmax float64, rec *HitRecord) (bool) {
 

@@ -2,17 +2,18 @@ package main;
 
 import "os";
 import "strconv";
-import "math";
+import "time";
+import "log";
 
 import "github.com/faiface/pixel";
 import "github.com/faiface/pixel/pixelgl";
 import "golang.org/x/image/colornames";
 
 import "gotracer/vmath";
-//import "gotracer/hitable";
+import "gotracer/hitable";
 
 var origin = vmath.NewVector3(0.0, 0.0, 0.0);
-//var world hitable.HitableList;
+var world hitable.HitableList;
 
 func run() {
 	var width = 640;
@@ -33,6 +34,8 @@ func run() {
 
 	for !window.Closed() {
 		
+		var start = time.Now();
+
 		window.Clear(colornames.Black);
 
 		var picture = Raytrace(bounds);
@@ -40,53 +43,46 @@ func run() {
 		var sprite = pixel.NewSprite(picture, picture.Bounds());
 		sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()));	
 
-		window.Update()
+		window.Update();
+
+		var delta = time.Since(start);
+		log.Printf("Frame time %s", delta);
 	}
 }
 
 func main() {
+
+	// Prepare the scene
+	world.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, -1.0)));
+	world.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, 100.5, -1.0)));
+
+	// Start the renderer
 	pixelgl.Run(run)
 }
 
 func CalculateColor(r *vmath.Ray) *vmath.Vector3 {
-	var t = HitSphere(vmath.NewVector3(0.0, 0.0, -1.0), 0.5, r);
+	var rec = hitable.NewHitRecord();
 
-	if t > 0.0 {
-		var n = r.PointAtParameter(t);
-		n.Sub(vmath.NewVector3(0, 0, -1));
-		n.Normalize();
-		n.Add(vmath.NewVector3(1.0, 1.0, 1.0));
-		n.MulScalar(0.5);
-		return n;
-	}
+	if world.Hit(r, 0.0, 9999999.0, rec) {
+		// Normal color
+		var color = vmath.NewVector3(rec.Normal.X + 1.0, rec.Normal.Y + 1.0, rec.Normal.Z + 1.0);
+		color.MulScalar(0.5);
+		return color;
 
-	var unitDirection = r.Direction.UnitVector();
-	t = 0.5 * (unitDirection.Y + 1.0);
-
-	var a = vmath.NewVector3(1.0, 1.0, 1.0);
-	a.MulScalar(1.0 - t);
-
-	var b = vmath.NewVector3(0.5, 0.7, 1.0);
-	b.MulScalar(t);
-
-	a.Add(b);
-	
-	return a;
-}
-
-func HitSphere(center *vmath.Vector3, radius float64, ray *vmath.Ray) float64 {
-	var oc = ray.Origin.Clone();
-	oc.Sub(center);
-
-	var a = Dot(ray.Direction, ray.Direction);
-	var b = 2.0 * Dot(oc, ray.Direction);
-	var c = Dot(oc, oc) - radius * radius;
-	var discriminant = b * b - 4 * a * c;
-
-	if(discriminant < 0) {
-		return -1.0;
 	} else {
-		return (-b - math.Sqrt(discriminant)) / (2.0 * a);
+		// Background
+		var unitDirection = r.Direction.UnitVector();
+		var t = 0.5 * (unitDirection.Y + 1.0);
+
+		var a = vmath.NewVector3(1.0, 1.0, 1.0);
+		a.MulScalar(1.0 - t);
+
+		var b = vmath.NewVector3(0.5, 0.7, 1.0);
+		b.MulScalar(t);
+
+		a.Add(b);
+
+		return a;
 	}
 }
 
