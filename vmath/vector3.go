@@ -83,6 +83,13 @@ func (v *Vector3) Clone() *Vector3 {
 	return NewVector3(v.X, v.Y, v.Z);
 };
 
+// Copy the context of another vector to this one
+func (v *Vector3) Copy(b *Vector3) {
+	v.X = b.X;
+	v.Y = b.Y;
+	v.Z = b.Z;
+}
+
 // Create a new copy vector with a unit length vector with the same direction as this one.
 func (v *Vector3) UnitVector() *Vector3 {
 	var unit = v.Clone();

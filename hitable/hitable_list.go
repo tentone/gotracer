@@ -30,7 +30,7 @@ func (hl *HitableList) Hit(r *vmath.Ray, tmin float64, tmax float64, rec *HitRec
 		if hl.List[i].Hit(r, tmin, closestSoFar, tempRec){
 			hitAnything = true;
 			closestSoFar = tempRec.T;
-			rec = tempRec;
+			rec.Copy(tempRec);
 		}
 		i++;
 	}

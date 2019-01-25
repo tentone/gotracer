@@ -54,7 +54,7 @@ func main() {
 
 	// Prepare the scene
 	world.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, -1.0)));
-	world.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, 100.5, -1.0)));
+	//world.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, -100.5, -1.0)));
 
 	// Start the renderer
 	pixelgl.Run(run)
