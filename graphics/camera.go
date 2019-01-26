@@ -1,6 +1,9 @@
 package graphics;
 
-import "gotracer/vmath";
+import (
+	"github.com/faiface/pixel"
+	"gotracer/vmath"
+);
 
 // Camera object describes how the objects are projected into the screen
 type Camera struct {
@@ -26,6 +29,22 @@ func NewCamera() *Camera {
 	c.Origin = vmath.NewVector3(0.0, 0.0, 0.0);
 	return c;
 }
+
+// Create camera from bouding box
+func NewCameraBounds(bounds pixel.Rect) *Camera {
+	var c = new(Camera);
+
+	var size = bounds.Size();
+	var aspect = size.X / size.Y;
+	var scale = 2.0;
+
+	c.LowerLeftCorner = vmath.NewVector3(-scale/2.0*aspect, -1.0, -1.0);
+	c.Vertical = vmath.NewVector3(0.0, scale, 0.0);
+	c.Horizontal = vmath.NewVector3(scale*aspect, 0.0, 0.0);
+	c.Origin = vmath.NewVector3(0.0, 0.0, 0.0);
+
+	return c;
+};
 
 // Get a ray from this camera, from a normalized UV screen coordinate.
 func (s *Camera) GetRay(u float64, v float64) bool {

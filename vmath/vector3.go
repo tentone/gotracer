@@ -1,7 +1,9 @@
 package vmath;
 
-import "strconv";
-import "math";
+import (
+	"math"
+	"strconv"
+);
 
 // Vector 3 is represented by a x,y,z values.
 type Vector3 struct {

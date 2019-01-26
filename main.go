@@ -1,19 +1,23 @@
 package main;
 
-import "os";
-import "strconv";
-import "time";
-import "log";
+import (
+	"log"
+	"os"
+	"strconv"
+	"time"
 
-import "github.com/faiface/pixel";
-import "github.com/faiface/pixel/pixelgl";
-import "golang.org/x/image/colornames";
+	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
+	"golang.org/x/image/colornames"
 
-import "gotracer/vmath";
-import "gotracer/hitable";
+	"gotracer/graphics"
+	"gotracer/hitable"
+	"gotracer/vmath"
+);
 
 var origin = vmath.NewVector3(0.0, 0.0, 0.0);
 var world hitable.HitableList;
+var camera *graphics.Camera;
 
 func run() {
 	var width = 640;
@@ -51,6 +55,7 @@ func run() {
 }
 
 func main() {
+	camera = graphics.NewCamera();
 
 	// Prepare the scene
 	world.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, -1.0)));
@@ -88,6 +93,7 @@ func CalculateColor(r *vmath.Ray) *vmath.Vector3 {
 
 //Render sky with raytrace
 func Raytrace(bounds pixel.Rect) *pixel.PictureData {
+
 	var size = bounds.Size();
 	var aspect = size.X / size.Y;
 	var scale = 2.0;
