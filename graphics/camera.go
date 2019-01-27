@@ -47,10 +47,17 @@ func NewCameraBounds(bounds pixel.Rect) *Camera {
 };
 
 // Get a ray from this camera, from a normalized UV screen coordinate.
-func (s *Camera) GetRay(u float64, v float64) bool {
+func (s *Camera) GetRay(u float64, v float64) *vmath.Ray {
+	var hor = s.Horizontal.Clone();
+	hor.MulScalar(u);
 
-	//TODO <ADD CODE HERE>
+	var vert = s.Vertical.Clone();
+	vert.MulScalar(v);
 
-	return false;
+	var direction = s.LowerLeftCorner.Clone();
+	direction.Add(hor);
+	direction.Add(vert);
+
+	return vmath.NewRay(s.Origin, direction);
 }
 

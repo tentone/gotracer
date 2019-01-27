@@ -15,7 +15,6 @@ import (
 	"gotracer/vmath"
 );
 
-var origin = vmath.NewVector3(0.0, 0.0, 0.0);
 var world hitable.HitableList;
 var camera *graphics.Camera;
 
@@ -24,6 +23,8 @@ func run() {
 	var height = 480;
 
 	var bounds = pixel.R(0, 0, float64(width), float64(height));
+
+	camera = graphics.NewCameraBounds(bounds);
 
 	var config = pixelgl.WindowConfig{
 		Resizable: false,
@@ -55,8 +56,6 @@ func run() {
 }
 
 func main() {
-	camera = graphics.NewCamera();
-
 	// Prepare the scene
 	world.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, -1.0)));
 	world.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, -100.5, -1.0)));
@@ -93,18 +92,12 @@ func CalculateColor(r *vmath.Ray) *vmath.Vector3 {
 
 //Render sky with raytrace
 func Raytrace(bounds pixel.Rect) *pixel.PictureData {
-
 	var size = bounds.Size();
-	var aspect = size.X / size.Y;
-	var scale = 2.0;
-
-	var lowerLeftCorner = vmath.NewVector3(-scale / 2.0 * aspect, -1.0, -1.0);
-	var vertical = vmath.NewVector3(0.0, scale, 0.0);
-	var horizontal = vmath.NewVector3(scale * aspect, 0.0, 0.0);
 	var picture = pixel.MakePictureData(bounds);
 
 	var nx int = int(size.X);
 	var ny int = int(size.Y);
+	//var antialiasing = false;
 
 	for j := 0; j < ny; j++ {
 		for i := 0; i < nx; i++ {
@@ -112,30 +105,18 @@ func Raytrace(bounds pixel.Rect) *pixel.PictureData {
 			var u = float64(i) / size.X;
 			var v = float64(j) / size.Y;
 
-			var hor = horizontal.Clone();
-			hor.MulScalar(u);
-
-			var vert = vertical.Clone();
-			vert.MulScalar(v);
-
-			var direction = lowerLeftCorner.Clone();
-			direction.Add(hor);
-			direction.Add(vert);
-
-			var ray = vmath.NewRay(origin, direction);
+			var ray = camera.GetRay(u, v);
 
 			//Calculate color
 			var color = CalculateColor(ray);
 
-			var ir int = int(255 * color.X);
-			var ig int = int(255 * color.Y);
-			var ib int = int(255 * color.Z);
+			color.MulScalar(255);
 
 			//Write to picture
 			var index = picture.Index(pixel.Vec{X:float64(i), Y:float64(j)});
-			picture.Pix[index].R = uint8(ir);
-			picture.Pix[index].G = uint8(ig);
-			picture.Pix[index].B = uint8(ib);
+			picture.Pix[index].R = uint8(color.X);
+			picture.Pix[index].G = uint8(color.Y);
+			picture.Pix[index].B = uint8(color.Z);
 		}
 	}
 
