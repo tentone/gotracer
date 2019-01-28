@@ -2,6 +2,7 @@ package main;
 
 import (
 	"log"
+	"math/rand"
 	"os"
 	"strconv"
 	"time"
@@ -43,7 +44,7 @@ func run() {
 
 		window.Clear(colornames.Black);
 
-		var picture = Raytrace(bounds);
+		var picture = Raytrace(bounds, false);
 
 		var sprite = pixel.NewSprite(picture, picture.Bounds());
 		sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()));	
@@ -91,24 +92,37 @@ func CalculateColor(r *vmath.Ray) *vmath.Vector3 {
 }
 
 //Render sky with raytrace
-func Raytrace(bounds pixel.Rect) *pixel.PictureData {
+func Raytrace(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
 	var size = bounds.Size();
 	var picture = pixel.MakePictureData(bounds);
 
 	var nx int = int(size.X);
 	var ny int = int(size.Y);
-	//var antialiasing = false;
 
 	for j := 0; j < ny; j++ {
 		for i := 0; i < nx; i++ {
-
-			var u = float64(i) / size.X;
-			var v = float64(j) / size.Y;
-
-			var ray = camera.GetRay(u, v);
-
 			//Calculate color
-			var color = CalculateColor(ray);
+			var color *vmath.Vector3;
+
+			if alialiasing {
+				var samples = 4;
+				color = vmath.NewVector3(0, 0, 0);
+
+				for k := 0; k < samples; k++ {
+					var u = (float64(i) + rand.Float64()) / size.X;
+					var v = (float64(j) + rand.Float64()) / size.Y;
+					var ray = camera.GetRay(u, v);
+					color.Add(CalculateColor(ray));
+				}
+
+				color.DivideScalar(float64(samples));
+			} else {
+				var u = float64(i) / size.X;
+				var v = float64(j) / size.Y;
+				var ray = camera.GetRay(u, v);
+
+				color = CalculateColor(ray);
+			}
 
 			color.MulScalar(255);
 
