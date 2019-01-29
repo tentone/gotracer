@@ -65,14 +65,37 @@ func main() {
 	pixelgl.Run(run)
 }
 
+func RandomInUnitSphere() *vmath.Vector3 {
+	var p *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
+
+	for {
+		p.Set(rand.Float64() * 2.0 - 1.0, rand.Float64() * 2.0 - 1.0, rand.Float64() * 2.0 - 1.0);
+
+		if p.SquaredLength() < 1.0 {
+			break
+		}
+	}
+
+	return p;
+}
+
 func CalculateColor(r *vmath.Ray) *vmath.Vector3 {
 	var rec = hitable.NewHitRecord();
 
 	if world.Hit(r, 0.0, 9999999.0, rec) {
-		// Normal color
-		var color = vmath.NewVector3(rec.Normal.X + 1.0, rec.Normal.Y + 1.0, rec.Normal.Z + 1.0);
+
+		var target *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
+		target.Add(rec.Normal);
+		target.Add(RandomInUnitSphere());
+
+		var color *vmath.Vector3 = CalculateColor(vmath.NewRay(rec.P, target));
 		color.MulScalar(0.5);
 		return color;
+
+		// Normal color
+		//var color = vmath.NewVector3(rec.Normal.X + 1.0, rec.Normal.Y + 1.0, rec.Normal.Z + 1.0);
+		//color.MulScalar(0.5);
+		//return color;
 
 	} else {
 		// Background

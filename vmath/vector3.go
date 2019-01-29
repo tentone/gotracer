@@ -33,6 +33,13 @@ func Cross(result *Vector3, a *Vector3, b *Vector3) {
 	result.Z = a.X * b.Y - a.Y * b.X;
 }
 
+// Set value of the vector.
+func (v *Vector3) Set(x float64, y float64, z float64) {
+	v.X = x;
+	v.Y = y;
+	v.Z = z;
+}
+
 // Add vectors
 func (v *Vector3) Add(b *Vector3) {
 	v.X += b.X;
