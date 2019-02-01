@@ -7,7 +7,7 @@ type HitRecord struct {
 	T float64;
 	P *vmath.Vector3;
 	Normal *vmath.Vector3;
-	Material *Material;
+	Material Material;
 }
 
 // Create new hitable list

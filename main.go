@@ -20,6 +20,9 @@ import (
 var world hitable.HitableList;
 var camera *graphics.Camera;
 
+// Max raytracing depth
+var MaxDepth int64 = 50;
+
 func run() {
 	var width = 640;
 	var height = 480;
@@ -87,16 +90,16 @@ func CalculateColor(ray *vmath.Ray, depth int64) *vmath.Vector3 {
 
 	if world.Hit(ray, 0.001, math.MaxFloat64, rec) {
 
-		//var scattered *vmath.Ray;
-		//var attenuation *vmath.Vector3;
+		var scattered *vmath.Ray = vmath.NewEmptyRay();
+		var attenuation *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
 
-		var target *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
-		target.Add(rec.Normal);
-		target.Add(RandomInUnitSphere());
-
-		var color *vmath.Vector3 = CalculateColor(vmath.NewRay(rec.P, target), depth);
-		color.MulScalar(0.5);
-		return color;
+		if depth < MaxDepth && rec.Material.Scatter(ray, rec, attenuation, scattered) {
+			var color = attenuation.Clone();
+			color.Mul(CalculateColor(scattered, depth + 1));
+			return color;
+		} else {
+			return vmath.NewVector3(0, 0, 0);
+		}
 
 	} else {
 
