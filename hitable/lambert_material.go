@@ -23,7 +23,7 @@ func (m *LambertMaterial) Scatter(ray *vmath.Ray, hitRecord *HitRecord, attenuat
 	target.Add(hitRecord.Normal);
 	target.Add(RandomInUnitSphere());
 
-	scattered = vmath.NewRay(hitRecord.P, target);
+	scattered.Set(hitRecord.P, target);
 	attenuation.Copy(m.Albedo);
 
 	return true;

@@ -18,7 +18,7 @@ func (m *MetalMaterial) Scatter(ray *vmath.Ray, hitRecord *HitRecord, attenuatio
 	var unit *vmath.Vector3 = ray.Direction.UnitVector();
 	var reflected = vmath.Reflect(unit, hitRecord.Normal);
 
-	scattered = vmath.NewRay(hitRecord.P, reflected);
+	scattered.Set(hitRecord.P, reflected);
 	attenuation.Copy(m.Albedo);
 
 	return vmath.Dot(scattered.Direction, hitRecord.Normal) > 0;

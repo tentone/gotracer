@@ -82,7 +82,7 @@ func RandomInUnitSphere() *vmath.Vector3 {
 }
 
 // Raytrace the scene to calculate the color for a ray.
-func CalculateColor(ray *vmath.Ray) *vmath.Vector3 {
+func CalculateColor(ray *vmath.Ray, depth int64) *vmath.Vector3 {
 	var rec = hitable.NewHitRecord();
 
 	if world.Hit(ray, 0.001, math.MaxFloat64, rec) {
@@ -94,7 +94,7 @@ func CalculateColor(ray *vmath.Ray) *vmath.Vector3 {
 		target.Add(rec.Normal);
 		target.Add(RandomInUnitSphere());
 
-		var color *vmath.Vector3 = CalculateColor(vmath.NewRay(rec.P, target));
+		var color *vmath.Vector3 = CalculateColor(vmath.NewRay(rec.P, target), depth);
 		color.MulScalar(0.5);
 		return color;
 
@@ -141,7 +141,7 @@ func Raytrace(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
 					var u = (float64(i) + rand.Float64()) / size.X;
 					var v = (float64(j) + rand.Float64()) / size.Y;
 					var ray = camera.GetRay(u, v);
-					color.Add(CalculateColor(ray));
+					color.Add(CalculateColor(ray, 0));
 				}
 
 				color.DivideScalar(float64(samples));
@@ -150,7 +150,7 @@ func Raytrace(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
 				var v = float64(j) / size.Y;
 				var ray = camera.GetRay(u, v);
 
-				color = CalculateColor(ray);
+				color = CalculateColor(ray, 0);
 			}
 
 			//Apply gamma
