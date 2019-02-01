@@ -11,7 +11,7 @@ type Sphere struct {
 
 // Create new hitable list
 func NewSphere(r float64, c *vmath.Vector3) *Sphere {
-	var s = new(Sphere)
+	var s = new(Sphere);
 	s.Radius = r;
 	s.Center = c;
 	return s;

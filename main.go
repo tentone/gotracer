@@ -2,6 +2,7 @@ package main;
 
 import (
 	"log"
+	"math"
 	"math/rand"
 	"os"
 	"strconv"
@@ -65,6 +66,7 @@ func main() {
 	pixelgl.Run(run)
 }
 
+// Calculate a random unitary vector in the surface of a sphere.
 func RandomInUnitSphere() *vmath.Vector3 {
 	var p *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
 
@@ -82,7 +84,7 @@ func RandomInUnitSphere() *vmath.Vector3 {
 func CalculateColor(r *vmath.Ray) *vmath.Vector3 {
 	var rec = hitable.NewHitRecord();
 
-	if world.Hit(r, 0.0, 9999999.0, rec) {
+	if world.Hit(r, 0.001, math.MaxFloat64, rec) {
 
 		var target *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
 		target.Add(rec.Normal);
@@ -128,7 +130,7 @@ func Raytrace(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
 			var color *vmath.Vector3;
 
 			if alialiasing {
-				var samples = 4;
+				var samples = 16;
 				color = vmath.NewVector3(0, 0, 0);
 
 				for k := 0; k < samples; k++ {
@@ -146,6 +148,10 @@ func Raytrace(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
 
 				color = CalculateColor(ray);
 			}
+
+			//Apply gamma
+			color.DivideScalar(1.0);
+			color.Sqrt();
 
 			color.MulScalar(255);
 

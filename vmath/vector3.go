@@ -21,18 +21,6 @@ func NewVector3(x float64, y float64, z float64) *Vector3 {
 	return v;
 }
 
-// Dot product between two vectors
-func Dot(a *Vector3, b *Vector3) float64 {
-	return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
-}
-
-// Cross product between two vectors
-func Cross(result *Vector3, a *Vector3, b *Vector3) {
-	result.X = a.Y * b.Z - a.Z * b.Y;
-	result.Y = a.Z * b.X - a.X * b.Z;
-	result.Z = a.X * b.Y - a.Y * b.X;
-}
-
 // Set value of the vector.
 func (v *Vector3) Set(x float64, y float64, z float64) {
 	v.X = x;
@@ -82,9 +70,39 @@ func (v *Vector3) DivideScalar(b float64) {
 	v.Z /= b;
 }
 
+// Apply sqrt to the individual components of the vector
+func (v *Vector3) Sqrt() {
+	v.X = math.Sqrt(v.X);
+	v.Y = math.Sqrt(v.Y);
+	v.Z = math.Sqrt(v.Z);
+}
+
 // Normalize this vector
 func (v *Vector3) Normalize() {
 	v.DivideScalar(v.Length());
+}
+
+// Calculate the reflection of a vector relative to a normal vector.
+func Reflect(v *Vector3, n *Vector3) *Vector3 {
+	var normal = n.Clone();
+	normal.MulScalar(2.0 * Dot(v, n));
+
+	var reflected = v.Clone();
+	reflected.Sub(normal);
+
+	return reflected;
+}
+
+// Dot product between two vectors
+func Dot(a *Vector3, b *Vector3) float64 {
+	return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+}
+
+// Cross product between two vectors
+func Cross(result *Vector3, a *Vector3, b *Vector3) {
+	result.X = a.Y * b.Z - a.Z * b.Y;
+	result.Y = a.Z * b.X - a.X * b.Z;
+	result.Z = a.X * b.Y - a.Y * b.X;
 }
 
 // Return a copy of the vector
