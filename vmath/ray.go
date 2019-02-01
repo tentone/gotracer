@@ -23,3 +23,7 @@ func (r *Ray) PointAtParameter(t float64) *Vector3 {
 	return v;
 }
 
+func (r *Ray) Set(origin *Vector3, direction *Vector3) {
+	r.Origin.Copy(origin);
+	r.Direction.Copy(direction);
+}

@@ -59,8 +59,8 @@ func run() {
 
 func main() {
 	// Prepare the scene
-	world.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, -1.0)));
-	world.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, -100.5, -1.0)));
+	world.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(1.0, 1.0, 1.0))));
+	world.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, -100.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(1.0, 1.0, 1.0))));
 
 	// Start the renderer
 	pixelgl.Run(run)
@@ -81,10 +81,14 @@ func RandomInUnitSphere() *vmath.Vector3 {
 	return p;
 }
 
-func CalculateColor(r *vmath.Ray) *vmath.Vector3 {
+// Raytrace the scene to calculate the color for a ray.
+func CalculateColor(ray *vmath.Ray) *vmath.Vector3 {
 	var rec = hitable.NewHitRecord();
 
-	if world.Hit(r, 0.001, math.MaxFloat64, rec) {
+	if world.Hit(ray, 0.001, math.MaxFloat64, rec) {
+
+		//var scattered *vmath.Ray;
+		//var attenuation *vmath.Vector3;
 
 		var target *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
 		target.Add(rec.Normal);
@@ -94,26 +98,26 @@ func CalculateColor(r *vmath.Ray) *vmath.Vector3 {
 		color.MulScalar(0.5);
 		return color;
 
-		// Normal color
-		//var color = vmath.NewVector3(rec.Normal.X + 1.0, rec.Normal.Y + 1.0, rec.Normal.Z + 1.0);
-		//color.MulScalar(0.5);
-		//return color;
-
 	} else {
-		// Background
-		var unitDirection = r.Direction.UnitVector();
-		var t = 0.5 * (unitDirection.Y + 1.0);
 
-		var a = vmath.NewVector3(1.0, 1.0, 1.0);
-		a.MulScalar(1.0 - t);
-
-		var b = vmath.NewVector3(0.5, 0.7, 1.0);
-		b.MulScalar(t);
-
-		a.Add(b);
-
-		return a;
+		return BackgroundColor(ray);
 	}
+}
+
+// Calculate the background color from ray.
+func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
+	var unitDirection = r.Direction.UnitVector();
+	var t = 0.5 * (unitDirection.Y + 1.0);
+
+	var a = vmath.NewVector3(1.0, 1.0, 1.0);
+	a.MulScalar(1.0 - t);
+
+	var b = vmath.NewVector3(0.5, 0.7, 1.0);
+	b.MulScalar(t);
+
+	a.Add(b);
+
+	return a;
 }
 
 //Render sky with raytrace
@@ -126,9 +130,9 @@ func Raytrace(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
 
 	for j := 0; j < ny; j++ {
 		for i := 0; i < nx; i++ {
-			//Calculate color
 			var color *vmath.Vector3;
 
+			//If using antialiasing jitter the UV and cast multiple rays
 			if alialiasing {
 				var samples = 16;
 				color = vmath.NewVector3(0, 0, 0);
@@ -165,19 +169,6 @@ func Raytrace(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
 
 	return picture;
 }
-
-//Dot product between two vectors
-func Dot(a *vmath.Vector3, b *vmath.Vector3) float64 {
-	return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
-}
-
-//Cross product between two vectors
-func Cross(result *vmath.Vector3, a *vmath.Vector3, b *vmath.Vector3) {
-	result.X = a.Y * b.Z - a.Z * b.Y;
-	result.Y = a.Z * b.X - a.X * b.Z;
-	result.Z = a.X * b.Y - a.Y * b.X;
-}
-
 
 // Write the frame to a PPM file string
 func WritePPM(picture *pixel.PictureData, fname string) {

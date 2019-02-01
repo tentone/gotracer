@@ -4,16 +4,18 @@ import "gotracer/vmath";
 import "math"
 
 // Sphere is hitable object represented by a center point and a radius.
+// The sphere object has a material attached to it.
 type Sphere struct {
 	Radius float64;
 	Center *vmath.Vector3;
+	Material Material;
 }
 
-// Create new hitable list
-func NewSphere(r float64, c *vmath.Vector3) *Sphere {
+func NewSphere(radius float64, center *vmath.Vector3, material Material) *Sphere {
 	var s = new(Sphere);
-	s.Radius = r;
-	s.Center = c;
+	s.Radius = radius;
+	s.Center = center;
+	s.Material = material;
 	return s;
 }
 
