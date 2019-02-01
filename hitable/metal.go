@@ -1,9 +1,6 @@
-package material
+package hitable
 
-import (
-	"gotracer/hitable"
-	"gotracer/vmath"
-);
+import "gotracer/vmath";
 
 // Metalic object type reflect the rays that hit the object surface.
 type Metal struct {
@@ -16,7 +13,7 @@ func NewMetal(albedo *vmath.Vector3) *Metal {
 	return m;
 }
 
-func (m *Metal) Scatter(ray *vmath.Ray, hitRecord *hitable.HitRecord, attenuation *vmath.Vector3, scattered *vmath.Ray) bool {
+func (m *Metal) Scatter(ray *vmath.Ray, hitRecord *HitRecord, attenuation *vmath.Vector3, scattered *vmath.Ray) bool {
 
 	//TODO <ADD CODE HERE>
 

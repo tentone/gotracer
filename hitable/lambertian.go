@@ -1,7 +1,6 @@
-package material;
+package hitable;
 
 import (
-	"gotracer/hitable"
 	"gotracer/vmath"
 	"math/rand"
 );
@@ -19,7 +18,7 @@ func NewLambertian(albedo *vmath.Vector3) *Lambertian {
 	return m;
 }
 
-func (m *Lambertian) Scatter(ray *vmath.Ray, hitRecord *hitable.HitRecord, attenuation *vmath.Vector3, scattered *vmath.Ray) bool {
+func (m *Lambertian) Scatter(ray *vmath.Ray, hitRecord *HitRecord, attenuation *vmath.Vector3, scattered *vmath.Ray) bool {
 	var target *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
 	target.Add(hitRecord.Normal);
 	target.Add(RandomInUnitSphere());
