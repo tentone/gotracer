@@ -86,16 +86,16 @@ func RandomInUnitSphere() *vmath.Vector3 {
 
 // Raytrace the scene to calculate the color for a ray.
 func CalculateColor(ray *vmath.Ray, depth int64) *vmath.Vector3 {
-	var rec = hitable.NewHitRecord();
+	var hitRecord = hitable.NewHitRecord();
 
-	if world.Hit(ray, 0.001, math.MaxFloat64, rec) {
+	if world.Hit(ray, 0.001, math.MaxFloat64, hitRecord) {
 
 		var scattered *vmath.Ray = vmath.NewEmptyRay();
 		var attenuation *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
 
-		if depth < MaxDepth && rec.Material.Scatter(ray, rec, attenuation, scattered) {
+		if depth < MaxDepth && hitRecord.Material.Scatter(ray, hitRecord, attenuation, scattered) {
 			var color = attenuation.Clone();
-			color.Mul(CalculateColor(scattered, depth + 1));
+			color.Mul(CalculateColor(scattered.Clone(), depth + 1));
 			return color;
 		} else {
 			return vmath.NewVector3(0, 0, 0);
