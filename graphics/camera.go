@@ -5,7 +5,8 @@ import (
 	"gotracer/vmath"
 );
 
-// Camera object describes how the objects are projected into the screen
+// Camera object describes how the objects are projected into the screen.
+// The camera object is used to get the rays that need to be casted for each screen UV coordinate.
 type Camera struct {
 	// Position of the camera in the world
 	Origin *vmath.Vector3;

@@ -9,6 +9,7 @@ import (
 // But they  modulate that with their own intrinsic color. Light that reflects off a diffuse surface has its direction randomized.
 // They also might be absorbed rather than reflected. The darker the surface, the more likely  absorption is.
 type LambertMaterial struct {
+	// Albedo represents the base color of the material.
 	Albedo *vmath.Vector3;
 }
 
@@ -19,8 +20,7 @@ func NewLambertMaterial(albedo *vmath.Vector3) *LambertMaterial {
 }
 
 func (m *LambertMaterial) Scatter(ray *vmath.Ray, hitRecord *HitRecord, attenuation *vmath.Vector3, scattered *vmath.Ray) bool {
-	var target *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
-	target.Add(hitRecord.Normal);
+	var target *vmath.Vector3 = hitRecord.Normal.Clone();
 	target.Add(RandomInUnitSphere());
 
 	scattered.Set(hitRecord.P, target);

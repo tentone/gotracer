@@ -24,4 +24,5 @@ func (a *HitRecord) Copy(b *HitRecord) {
 	a.T = b.T;
 	a.P.Copy(b.P);
 	a.Normal.Copy(b.Normal);
+	a.Material = b.Material;
 }

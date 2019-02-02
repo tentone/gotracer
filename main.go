@@ -17,10 +17,10 @@ import (
 	"gotracer/vmath"
 );
 
-var world hitable.HitableList;
-var camera *graphics.Camera;
+var Scene hitable.HitableList;
+var Camera *graphics.Camera;
 
-// Max raytracing depth
+// Max raytracing recursive depth
 var MaxDepth int64 = 50;
 
 func run() {
@@ -29,7 +29,7 @@ func run() {
 
 	var bounds = pixel.R(0, 0, float64(width), float64(height));
 
-	camera = graphics.NewCameraBounds(bounds);
+	Camera = graphics.NewCameraBounds(bounds);
 
 	var config = pixelgl.WindowConfig{
 		Resizable: false,
@@ -62,8 +62,11 @@ func run() {
 
 func main() {
 	// Prepare the scene
-	world.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(1.0, 1.0, 1.0))));
-	world.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, -100.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(1.0, 1.0, 1.0))));
+	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.8, 0.3, 0.3))));
+	Scene.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, -100.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.8, 0.8, 0.0))));
+	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.6, 0.2))));
+	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewNormalMaterial()));
+	//Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.8, 0.8))));
 
 	// Start the renderer
 	pixelgl.Run(run)
@@ -88,7 +91,7 @@ func RandomInUnitSphere() *vmath.Vector3 {
 func CalculateColor(ray *vmath.Ray, depth int64) *vmath.Vector3 {
 	var hitRecord = hitable.NewHitRecord();
 
-	if world.Hit(ray, 0.001, math.MaxFloat64, hitRecord) {
+	if Scene.Hit(ray, 0.01, math.MaxFloat64, hitRecord) {
 
 		var scattered *vmath.Ray = vmath.NewEmptyRay();
 		var attenuation *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
@@ -143,7 +146,7 @@ func Raytrace(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
 				for k := 0; k < samples; k++ {
 					var u = (float64(i) + rand.Float64()) / size.X;
 					var v = (float64(j) + rand.Float64()) / size.Y;
-					var ray = camera.GetRay(u, v);
+					var ray = Camera.GetRay(u, v);
 					color.Add(CalculateColor(ray, 0));
 				}
 
@@ -151,7 +154,7 @@ func Raytrace(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
 			} else {
 				var u = float64(i) / size.X;
 				var v = float64(j) / size.Y;
-				var ray = camera.GetRay(u, v);
+				var ray = Camera.GetRay(u, v);
 
 				color = CalculateColor(ray, 0);
 			}

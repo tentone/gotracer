@@ -4,7 +4,13 @@ import "gotracer/vmath";
 
 // Metalic object type reflect the rays that hit the object surface.
 type MetalMaterial struct {
+	// Albedo represents the base color of the material.
 	Albedo *vmath.Vector3;
+
+	// Fuzz indicates the roughness of the metallic surface.
+	// The more fuzz there is the more the ray are reflected with an offset applied.
+	Fuzz float64;
+
 }
 
 func NewMetalMaterial(albedo *vmath.Vector3) *MetalMaterial {
