@@ -2,7 +2,6 @@ package hitable;
 
 import (
 	"gotracer/vmath"
-	"math/rand"
 );
 
 // LambertMaterial materials are diffuse objects that don’t emit light merely take on the color of their surroundings.
@@ -21,25 +20,10 @@ func NewLambertMaterial(albedo *vmath.Vector3) *LambertMaterial {
 
 func (m *LambertMaterial) Scatter(ray *vmath.Ray, hitRecord *HitRecord, attenuation *vmath.Vector3, scattered *vmath.Ray) bool {
 	var target *vmath.Vector3 = hitRecord.Normal.Clone();
-	target.Add(RandomInUnitSphere());
+	target.Add(vmath.RandomInUnitSphere());
 
 	scattered.Set(hitRecord.P, target);
 	attenuation.Copy(m.Albedo);
 
 	return true;
-}
-
-// Calculate a random unitary vector in the surface of a sphere.
-func RandomInUnitSphere() *vmath.Vector3 {
-	var p *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
-
-	for {
-		p.Set(rand.Float64() * 2.0 - 1.0, rand.Float64() * 2.0 - 1.0, rand.Float64() * 2.0 - 1.0);
-
-		if p.SquaredLength() < 1.0 {
-			break
-		}
-	}
-
-	return p;
 }

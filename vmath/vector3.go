@@ -2,6 +2,7 @@ package vmath;
 
 import (
 	"math"
+	"math/rand"
 	"strconv"
 );
 
@@ -91,6 +92,21 @@ func Reflect(v *Vector3, n *Vector3) *Vector3 {
 	reflected.Sub(normal);
 
 	return reflected;
+}
+
+// Calculate a random unitary vector in the surface of a sphere.
+func RandomInUnitSphere() *Vector3 {
+	var p *Vector3 = NewVector3(0, 0, 0);
+
+	for {
+		p.Set(rand.Float64() * 2.0 - 1.0, rand.Float64() * 2.0 - 1.0, rand.Float64() * 2.0 - 1.0);
+
+		if p.SquaredLength() < 1.0 {
+			break
+		}
+	}
+
+	return p;
 }
 
 // Dot product between two vectors

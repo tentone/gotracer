@@ -23,6 +23,10 @@ var Camera *graphics.Camera;
 // Max raytracing recursive depth
 var MaxDepth int64 = 50;
 
+//If true the last n frames are blended
+var TemporalFilter bool = false;
+var TemporalFilterSize int = 8;
+
 func run() {
 	var width = 640;
 	var height = 480;
@@ -42,6 +46,8 @@ func run() {
 	
 	CheckError(err);
 
+	var frames []*pixel.PictureData;
+
 	for !window.Closed() {
 		
 		var start = time.Now();
@@ -50,8 +56,37 @@ func run() {
 
 		var picture = Raytrace(bounds, false);
 
-		var sprite = pixel.NewSprite(picture, picture.Bounds());
-		sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()));	
+		if TemporalFilter {
+			// Add new frame to the list
+			frames = append(frames, picture);
+			if len(frames) > TemporalFilterSize {
+				frames = frames[1:];
+			}
+
+			var final = pixel.MakePictureData(bounds);
+
+			// Average the frames in the list
+			for i := 0; i < len(final.Pix); i++ {
+
+				var r, g, b int;
+
+				for j := 0; j < len(frames); j++ {
+					r += (int)(frames[j].Pix[i].R);
+					g += (int)(frames[j].Pix[i].G);
+					b += (int)(frames[j].Pix[i].B);
+				}
+
+				final.Pix[i].R = (uint8)(r / len(frames));
+				final.Pix[i].G = (uint8)(g / len(frames));
+				final.Pix[i].B = (uint8)(b / len(frames));
+			}
+
+			var sprite = pixel.NewSprite(final, final.Bounds());
+			sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()));
+		} else {
+			var sprite = pixel.NewSprite(picture, picture.Bounds());
+			sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()));
+		}
 
 		window.Update();
 
@@ -64,9 +99,9 @@ func main() {
 	// Prepare the scene
 	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.8, 0.3, 0.3))));
 	Scene.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, -100.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.8, 0.8, 0.0))));
-	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.6, 0.2))));
+	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.6, 0.2), 1.0)));
+	//Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.8, 0.8), 0.3)));
 	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewNormalMaterial()));
-	//Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.8, 0.8))));
 
 	// Start the renderer
 	pixelgl.Run(run)

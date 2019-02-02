@@ -13,9 +13,10 @@ type MetalMaterial struct {
 
 }
 
-func NewMetalMaterial(albedo *vmath.Vector3) *MetalMaterial {
+func NewMetalMaterial(albedo *vmath.Vector3, fuzz float64) *MetalMaterial {
 	var m = new(MetalMaterial);
 	m.Albedo = albedo;
+	m.Fuzz = fuzz;
 	return m;
 }
 
@@ -23,6 +24,12 @@ func (m *MetalMaterial) Scatter(ray *vmath.Ray, hitRecord *HitRecord, attenuatio
 
 	var unit *vmath.Vector3 = ray.Direction.UnitVector();
 	var reflected = vmath.Reflect(unit, hitRecord.Normal);
+
+	if m.Fuzz != 0 {
+		var fuzzOffset = vmath.RandomInUnitSphere();
+		fuzzOffset.MulScalar(m.Fuzz);
+		reflected.Add(fuzzOffset);
+	}
 
 	scattered.Set(hitRecord.P, reflected);
 	attenuation.Copy(m.Albedo);
