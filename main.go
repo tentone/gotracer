@@ -24,8 +24,8 @@ var Camera *graphics.Camera;
 var MaxDepth int64 = 50;
 
 //If true the last n frames are blended
-var TemporalFilter bool = false;
-var TemporalFilterSize int = 8;
+var TemporalFilter bool = true;
+var TemporalFilterSamples int = 32;
 
 func run() {
 	var width = 640;
@@ -59,7 +59,7 @@ func run() {
 		if TemporalFilter {
 			// Add new frame to the list
 			frames = append(frames, picture);
-			if len(frames) > TemporalFilterSize {
+			if len(frames) > TemporalFilterSamples {
 				frames = frames[1:];
 			}
 
@@ -99,9 +99,9 @@ func main() {
 	// Prepare the scene
 	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.8, 0.3, 0.3))));
 	Scene.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, -100.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.8, 0.8, 0.0))));
-	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.6, 0.2), 1.0)));
-	//Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.8, 0.8), 0.3)));
-	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewNormalMaterial()));
+	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.6, 0.2), 0.4)));
+	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.8, 0.8), 0.2)));
+	//Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewNormalMaterial()));
 
 	// Start the renderer
 	pixelgl.Run(run)
@@ -126,7 +126,7 @@ func RandomInUnitSphere() *vmath.Vector3 {
 func CalculateColor(ray *vmath.Ray, depth int64) *vmath.Vector3 {
 	var hitRecord = hitable.NewHitRecord();
 
-	if Scene.Hit(ray, 0.01, math.MaxFloat64, hitRecord) {
+	if Scene.Hit(ray, 0.001, math.MaxFloat64, hitRecord) {
 
 		var scattered *vmath.Ray = vmath.NewEmptyRay();
 		var attenuation *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
@@ -175,23 +175,29 @@ func Raytrace(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
 
 			//If using antialiasing jitter the UV and cast multiple rays
 			if alialiasing {
-				var samples = 16;
+				var samples int = 16;
 				color = vmath.NewVector3(0, 0, 0);
 
 				for k := 0; k < samples; k++ {
-					var u = (float64(i) + rand.Float64()) / size.X;
-					var v = (float64(j) + rand.Float64()) / size.Y;
-					var ray = Camera.GetRay(u, v);
-					color.Add(CalculateColor(ray, 0));
+					var u float64 = (float64(i) + rand.Float64()) / size.X;
+					var v float64 = (float64(j) + rand.Float64()) / size.Y;
+					color.Add(CalculateColor(Camera.GetRay(u, v), 0));
 				}
 
 				color.DivideScalar(float64(samples));
 			} else {
-				var u = float64(i) / size.X;
-				var v = float64(j) / size.Y;
-				var ray = Camera.GetRay(u, v);
+				var u float64;
+				var v float64;
 
-				color = CalculateColor(ray, 0);
+				if TemporalFilter {
+					u = (float64(i) + rand.Float64()) / size.X;
+					v = (float64(j) + rand.Float64()) / size.Y;
+				} else {
+					u = float64(i) / size.X;
+					v = float64(j) / size.Y;
+				}
+
+				color = CalculateColor(Camera.GetRay(u, v), 0);
 			}
 
 			//Apply gamma
