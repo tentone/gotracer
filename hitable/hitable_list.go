@@ -19,7 +19,7 @@ func (hl *HitableList) Add(h Hitable) {
 }
 
 // Hit iterates and tests all hitable object in the list.
-func (hl *HitableList) Hit(r *vmath.Ray, tmin float64, tmax float64, rec *HitRecord) (bool) {
+func (hl *HitableList) Hit(r *vmath.Ray, tmin float64, tmax float64, rec *HitRecord) bool {
 
 	var hitAnything bool = false;
 	var closestSoFar float64 = tmax;
@@ -27,7 +27,7 @@ func (hl *HitableList) Hit(r *vmath.Ray, tmin float64, tmax float64, rec *HitRec
 	var i int = 0;
 
 	for i < len(hl.List) {
-		if hl.List[i].Hit(r, tmin, closestSoFar, tempRec){
+		if hl.List[i].Hit(r, tmin, closestSoFar, tempRec) {
 			hitAnything = true;
 			closestSoFar = tempRec.T;
 			rec.Copy(tempRec);

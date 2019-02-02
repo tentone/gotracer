@@ -40,6 +40,7 @@ func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, rec *HitRecord)
 			rec.Normal = rec.P.Clone();
 			rec.Normal.Sub(s.Center);
 			rec.Normal.DivideScalar(s.Radius);
+			rec.Material = s.Material;
 			return true;
 		}
 
@@ -52,6 +53,7 @@ func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, rec *HitRecord)
 			rec.Normal = rec.P.Clone();
 			rec.Normal.Sub(s.Center);
 			rec.Normal.DivideScalar(s.Radius);
+			rec.Material = s.Material;
 			return true;
 		}
 		
