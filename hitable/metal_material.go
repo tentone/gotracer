@@ -10,7 +10,6 @@ type MetalMaterial struct {
 	// Fuzz indicates the roughness of the metallic surface.
 	// The more fuzz there is the more the ray are reflected with an offset applied.
 	Fuzz float64;
-
 }
 
 func NewMetalMaterial(albedo *vmath.Vector3, fuzz float64) *MetalMaterial {

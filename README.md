@@ -1,9 +1,24 @@
 # Gotracer
  - Software Raytracer written in golang.
  - Based on Ray Tracing In One Weekend by Peter Shirley
-
+ - Images can be previewed directly on the window as they are generated.
+ - Interation can be done using keys from the keyboard, to control the camera.
+ 
 ## Screenshot
  - TODO
+
+## Features
+ - Geometries
+    - Sphere
+ - Materials
+    - Dieletrics
+    - Lambert
+    - Metal
+    - Normal materials
+ - Filtering
+    - Antialiased image from ray jittering.
+    - Temporal accomulation from partially raytraced images.
+    - Noise filtering TODO
 
 ## Build
  - Install golang development tools

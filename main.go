@@ -25,7 +25,11 @@ var MaxDepth int64 = 50;
 
 //If true the last n frames are blended
 var TemporalFilter bool = true;
-var TemporalFilterSamples int = 32;
+var TemporalFilterSamples int = 64;
+
+//If true splits the image generation into threads
+var Multithreaded bool = false;
+var MultithreadedTheads int = 4;
 
 func run() {
 	var width = 640;
@@ -54,7 +58,7 @@ func run() {
 
 		window.Clear(colornames.Black);
 
-		var picture = Raytrace(bounds, false);
+		var picture = RaytraceImage(bounds, false);
 
 		if TemporalFilter {
 			// Add new frame to the list
@@ -122,8 +126,8 @@ func RandomInUnitSphere() *vmath.Vector3 {
 	return p;
 }
 
-// Raytrace the scene to calculate the color for a ray.
-func CalculateColor(ray *vmath.Ray, depth int64) *vmath.Vector3 {
+// RaytraceImage the scene to calculate the color for a ray.
+func RaytraceColor(ray *vmath.Ray, depth int64) *vmath.Vector3 {
 	var hitRecord = hitable.NewHitRecord();
 
 	if Scene.Hit(ray, 0.001, math.MaxFloat64, hitRecord) {
@@ -133,10 +137,12 @@ func CalculateColor(ray *vmath.Ray, depth int64) *vmath.Vector3 {
 
 		if depth < MaxDepth && hitRecord.Material.Scatter(ray, hitRecord, attenuation, scattered) {
 			var color = attenuation.Clone();
-			color.Mul(CalculateColor(scattered.Clone(), depth + 1));
+			color.Mul(RaytraceColor(scattered.Clone(), depth + 1));
 			return color;
 		} else {
+			// Ray was absorved return black
 			return vmath.NewVector3(0, 0, 0);
+			//TODO <EXPERIMENT USING THE SCATTERED RAY VALUE>
 		}
 
 	} else {
@@ -162,7 +168,7 @@ func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
 }
 
 //Render sky with raytrace
-func Raytrace(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
+func RaytraceImage(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
 	var size = bounds.Size();
 	var picture = pixel.MakePictureData(bounds);
 
@@ -181,7 +187,7 @@ func Raytrace(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
 				for k := 0; k < samples; k++ {
 					var u float64 = (float64(i) + rand.Float64()) / size.X;
 					var v float64 = (float64(j) + rand.Float64()) / size.Y;
-					color.Add(CalculateColor(Camera.GetRay(u, v), 0));
+					color.Add(RaytraceColor(Camera.GetRay(u, v), 0));
 				}
 
 				color.DivideScalar(float64(samples));
@@ -197,7 +203,7 @@ func Raytrace(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
 					v = float64(j) / size.Y;
 				}
 
-				color = CalculateColor(Camera.GetRay(u, v), 0);
+				color = RaytraceColor(Camera.GetRay(u, v), 0);
 			}
 
 			//Apply gamma

@@ -94,6 +94,44 @@ func Reflect(v *Vector3, n *Vector3) *Vector3 {
 	return reflected;
 }
 
+
+// Calculate the refracted vector of a vector relative to a normal vector.
+// This calculation is done using the snells law. Ni is the initial refractive indice and No is the out refraction indice.
+// The refractionRatio parameters is calculated from Ni/No.
+func Refract(v *Vector3, normal *Vector3, refractionRatio float64, refracted *Vector3) bool {
+
+	var uv *Vector3 = v.UnitVector();
+	var dt float64 = Dot(uv, normal);
+	var discriminant float64 = 1.0 - math.Pow(refractionRatio, 2) * (1 - math.Pow(dt, 2));
+
+	if discriminant > 0 {
+
+		var normalDt = normal.Clone();
+		normalDt.MulScalar(dt);
+		uv.Sub(normalDt);
+		uv.MulScalar(refractionRatio);
+
+		var normalDisc = normal.Clone();
+		normalDisc.MulScalar(math.Sqrt(discriminant));
+
+		uv.Sub(normalDisc);
+
+		refracted.Copy(uv);
+
+		return true;
+	}
+
+	return false;
+}
+
+// Real glass has reflectivity that varies with angle look at a window at a steep angle and it becomes a mirror.
+// The behavior can be approximated by Christophe Schlick polynomial aproximation.
+func Schlick(cosine float64, reflectiveIndex float64) float64 {
+	var r = math.Pow((1 - reflectiveIndex) / (1 + reflectiveIndex), 2);
+	return r + (1 - r) * math.Pow(1 - cosine, 5);
+}
+
+
 // Calculate a random unitary vector in the surface of a sphere.
 func RandomInUnitSphere() *Vector3 {
 	var p *Vector3 = NewVector3(0, 0, 0);
