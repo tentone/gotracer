@@ -22,6 +22,12 @@ func NewVector3(x float64, y float64, z float64) *Vector3 {
 	return v;
 }
 
+// Create new empty vector3 with values.
+func NewEmptyVector3() *Vector3 {
+	return new(Vector3);
+}
+
+
 // Set value of the vector.
 func (v *Vector3) Set(x float64, y float64, z float64) {
 	v.X = x;
@@ -130,7 +136,6 @@ func Schlick(cosine float64, reflectiveIndex float64) float64 {
 	var r = math.Pow((1 - reflectiveIndex) / (1 + reflectiveIndex), 2);
 	return r + (1 - r) * math.Pow(1 - cosine, 5);
 }
-
 
 // Calculate a random unitary vector in the surface of a sphere.
 func RandomInUnitSphere() *Vector3 {

@@ -32,7 +32,7 @@ var Multithreaded bool = false;
 var MultithreadedTheads int = 4;
 
 func run() {
-	var width = 640;
+	var width = 800;
 	var height = 480;
 
 	var bounds = pixel.R(0, 0, float64(width), float64(height));
@@ -104,26 +104,14 @@ func main() {
 	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.8, 0.3, 0.3))));
 	Scene.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, -100.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.8, 0.8, 0.0))));
 	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.6, 0.2), 0.4)));
-	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.8, 0.8), 0.2)));
+	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewDieletricMaterial(1.5)));
+	//Scene.Add(hitable.NewSphere(0.4, vmath.NewVector3(-1.0, 1.0, -1.0), hitable.NewDieletricMaterial(0.2)));
+
+	//Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.8, 0.8), 0.2)));
 	//Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewNormalMaterial()));
 
 	// Start the renderer
 	pixelgl.Run(run)
-}
-
-// Calculate a random unitary vector in the surface of a sphere.
-func RandomInUnitSphere() *vmath.Vector3 {
-	var p *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
-
-	for {
-		p.Set(rand.Float64() * 2.0 - 1.0, rand.Float64() * 2.0 - 1.0, rand.Float64() * 2.0 - 1.0);
-
-		if p.SquaredLength() < 1.0 {
-			break
-		}
-	}
-
-	return p;
 }
 
 // RaytraceImage the scene to calculate the color for a ray.

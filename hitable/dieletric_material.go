@@ -1,6 +1,9 @@
 package hitable
 
-import "gotracer/vmath";
+import (
+	"gotracer/vmath"
+	"math/rand"
+);
 
 // Dielectric material allow light to pass trough them.
 // When a light ray hits them, it splits into a reflected ray and a refracted (transmitted) ray.
@@ -19,30 +22,42 @@ var AirRefractiveIndice = 1.0;
 
 func (m *DieletricMaterial) Scatter(ray *vmath.Ray, hitRecord *HitRecord, attenuation *vmath.Vector3, scattered *vmath.Ray) bool {
 
-	var outwardNormal *vmath.Vector3;
+	var outwardNormal *vmath.Vector3 = vmath.NewEmptyVector3();
+	var refracted *vmath.Vector3 = vmath.NewEmptyVector3();
 	var reflected *vmath.Vector3 = vmath.Reflect(ray.Direction, hitRecord.Normal);
 	var refractionRatio float64;
+	var reflectionProbe float64;
+	var cosine float64;
 
 	attenuation.Set(1.0, 1.0, 1.0);
 
-	var refracted *vmath.Vector3;
+	var dot float64 = vmath.Dot(ray.Direction, hitRecord.Normal);
 
-	if vmath.Dot(ray.Direction, hitRecord.Normal) > 0 {
+	if dot > 0 {
 		outwardNormal.Copy(hitRecord.Normal);
 		outwardNormal.MulScalar(-1.0);
 		refractionRatio = m.RefractiveIndice;
+		cosine = m.RefractiveIndice * dot / ray.Direction.Length();
 	} else {
 		outwardNormal.Copy(hitRecord.Normal);
 		refractionRatio = AirRefractiveIndice / m.RefractiveIndice;
+		cosine = -dot / ray.Direction.Length();
 	}
 
-	// If there is a refracted ray use it as scattered ray
-	// TODO <SUPPORT MULTIPLE SCATERED RAYS>
 	if vmath.Refract(ray.Direction, outwardNormal, refractionRatio, refracted) {
-		scattered.Set(hitRecord.P, refracted);
+		reflectionProbe = vmath.Schlick(cosine, m.RefractiveIndice);
 	} else {
+		reflectionProbe = 1.0;
 		scattered.Set(hitRecord.P, reflected);
-		return false;
+		return true;
+	}
+
+	// TODO <SUPPORT MULTIPLE SCATERED RAYS>
+	// Return reflected of refracted randomly with reflection probe probability.
+	if rand.Float64() < reflectionProbe {
+		scattered.Set(hitRecord.P, reflected);
+	} else {
+		scattered.Set(hitRecord.P, refracted);
 	}
 
 	return true;
