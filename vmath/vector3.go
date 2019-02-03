@@ -137,6 +137,23 @@ func Schlick(cosine float64, reflectiveIndex float64) float64 {
 	return r + (1 - r) * math.Pow(1 - cosine, 5);
 }
 
+
+// Calculate a random unitary vector in the surface of a sphere.
+// Get ray origins be on a disk around lookfrom rather than from a point.
+func RandomInUnitDisk() *Vector3 {
+	var p *Vector3 = NewVector3(0, 0, 0);
+
+	for {
+		p.Set(rand.Float64() * 2.0 - 1.0, rand.Float64() * 2.0 - 1.0, 0.0);
+
+		if Dot(p, p) < 1.0 {
+			break
+		}
+	}
+
+	return p;
+}
+
 // Calculate a random unitary vector in the surface of a sphere.
 func RandomInUnitSphere() *Vector3 {
 	var p *Vector3 = NewVector3(0, 0, 0);

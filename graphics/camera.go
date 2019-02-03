@@ -6,7 +6,7 @@ import (
 	"math"
 );
 
-// Camera object describes how the objects are projected into the screen.
+// CameraDefocus object describes how the objects are projected into the screen.
 // The camera object is used to get the rays that need to be casted for each screen UV coordinate.
 type Camera struct {
 	// Aspect ratio of the camera viewport (X / Y)
@@ -42,8 +42,8 @@ func NewCamera(bounds pixel.Rect, position *vmath.Vector3, lookAt *vmath.Vector3
 	var c = new(Camera);
 	var size = bounds.Size();
 
-	c.AspectRatio = size.X / size.Y;
 	c.Fov = fov;
+	c.AspectRatio = size.X / size.Y;
 	c.Position = position;
 	c.LookAt = lookAt;
 	c.Up = up;
