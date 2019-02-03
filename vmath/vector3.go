@@ -158,10 +158,8 @@ func Dot(a *Vector3, b *Vector3) float64 {
 }
 
 // Cross product between two vectors
-func Cross(result *Vector3, a *Vector3, b *Vector3) {
-	result.X = a.Y * b.Z - a.Z * b.Y;
-	result.Y = a.Z * b.X - a.X * b.Z;
-	result.Z = a.X * b.Y - a.Y * b.X;
+func Cross(a *Vector3, b *Vector3) *Vector3 {
+	return NewVector3(a.Y * b.Z - a.Z * b.Y, -(a.X * b.Z - a.Z * b.X), a.X * b.Y - a.Y * b.X);
 }
 
 // Return a copy of the vector

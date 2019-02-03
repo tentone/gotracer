@@ -32,7 +32,7 @@ var Multithreaded bool = false;
 var MultithreadedTheads int = 4;
 
 func run() {
-	var width = 800;
+	var width = 640;
 	var height = 480;
 
 	var bounds = pixel.R(0, 0, float64(width), float64(height));
