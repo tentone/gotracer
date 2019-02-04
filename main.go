@@ -23,19 +23,22 @@ var Camera *graphics.Camera;
 // Max raytracing recursive depth
 var MaxDepth int64 = 50;
 
-//If true the last n frames are blended
-var TemporalFilter bool = false;
-var TemporalFilterSamples int = 64;
+//If true the last n Frames are blended
+var TemporalFilter bool = true;
+var TemporalFilterSamples int = 32;
+var Frames []*pixel.PictureData;
 
 //If true splits the image generation into threads
-var Multithreaded bool = false;
+var Multithreaded bool = true;
 var MultithreadedTheads int = 4;
 
 func run() {
-	var width = 640;
-	var height = 480;
+	var width float64 = 320.0;
+	var height float64 = 240.0;
+	var upscale float64 = 2.0;
 
-	var bounds = pixel.R(0, 0, float64(width), float64(height));
+	var bounds = pixel.R(0, 0, width, height);
+	var windowBounds = pixel.R(0, 0, width * upscale, height * upscale);
 
 	Camera = graphics.NewCameraBounds(bounds);
 
@@ -44,77 +47,88 @@ func run() {
 		Undecorated: false,
 		VSync: false,
 		Title: "Gotracer",
-		Bounds: bounds};
+		Bounds: windowBounds};
 
 	var window, err = pixelgl.NewWindow(config);
 	
 	CheckError(err);
 
-	var frames []*pixel.PictureData;
+	var delta time.Duration;
 
 	for !window.Closed() {
 		
-		var start = time.Now();
+		var start time.Time = time.Now();
 
 		window.Clear(colornames.Black);
 
-		var picture = RaytraceImage(bounds, false);
+		var picture *pixel.PictureData = RaytraceImage(bounds, false);
+		var sprite *pixel.Sprite;
 
 		if TemporalFilter {
+
 			// Add new frame to the list
-			frames = append(frames, picture);
-			if len(frames) > TemporalFilterSamples {
-				frames = frames[1:];
+			Frames = append(Frames, picture);
+			if len(Frames) > TemporalFilterSamples {
+				Frames = Frames[1:];
 			}
 
 			var final = pixel.MakePictureData(bounds);
 
-			// Average the frames in the list
+			// Average the Frames in the list
 			for i := 0; i < len(final.Pix); i++ {
 
 				var r, g, b int;
 
-				for j := 0; j < len(frames); j++ {
-					r += (int)(frames[j].Pix[i].R);
-					g += (int)(frames[j].Pix[i].G);
-					b += (int)(frames[j].Pix[i].B);
+				for j := 0; j < len(Frames); j++ {
+					r += (int)(Frames[j].Pix[i].R);
+					g += (int)(Frames[j].Pix[i].G);
+					b += (int)(Frames[j].Pix[i].B);
 				}
 
-				final.Pix[i].R = (uint8)(r / len(frames));
-				final.Pix[i].G = (uint8)(g / len(frames));
-				final.Pix[i].B = (uint8)(b / len(frames));
+				final.Pix[i].R = (uint8)(r / len(Frames));
+				final.Pix[i].G = (uint8)(g / len(Frames));
+				final.Pix[i].B = (uint8)(b / len(Frames));
 			}
 
-			var sprite = pixel.NewSprite(final, final.Bounds());
-			sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()));
+			sprite = pixel.NewSprite(final, final.Bounds());
 		} else {
-			var sprite = pixel.NewSprite(picture, picture.Bounds());
-			sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()));
+			sprite = pixel.NewSprite(picture, picture.Bounds());
 		}
+		sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()).Scaled(window.Bounds().Center(), upscale));
 
 		//Keyboard input
-		if window.Pressed(pixelgl.KeyLeft) {
-			Camera.Position.X += 0.1;
-			Camera.UpdateViewport();
-		}
 		if window.Pressed(pixelgl.KeyRight) {
+			Camera.Position.X += 0.1;
+			UpdateCamera();
+		}
+		if window.Pressed(pixelgl.KeyLeft) {
 			Camera.Position.X -= 0.1;
-			Camera.UpdateViewport();
+			UpdateCamera();
 		}
 		if window.Pressed(pixelgl.KeyDown) {
 			Camera.Position.Y -= 0.1;
-			Camera.UpdateViewport();
+			UpdateCamera();
 		}
 		if window.Pressed(pixelgl.KeyUp) {
 			Camera.Position.Y += 0.1;
-			Camera.UpdateViewport();
+			UpdateCamera();
 		}
 
 		window.Update();
+		delta = time.Since(start);
 
-		var delta = time.Since(start);
 		log.Printf("Frame time %s", delta);
 	}
+}
+
+// Update the camera viewport
+func UpdateCamera(){
+
+	if TemporalFilter {
+		Frames = nil;
+	}
+
+	Camera.UpdateViewport();
 }
 
 func main() {
@@ -147,8 +161,10 @@ func RaytraceColor(ray *vmath.Ray, depth int64) *vmath.Vector3 {
 			return color;
 		} else {
 			// Ray was absorved return black
-			return vmath.NewVector3(0, 0, 0);
+			//return vmath.NewVector3(0, 0, 0);
+
 			//TODO <EXPERIMENT USING THE SCATTERED RAY VALUE>
+			return attenuation.Clone();
 		}
 
 	} else {
