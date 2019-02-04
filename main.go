@@ -25,11 +25,11 @@ var MaxDepth int64 = 50;
 
 //If true the last n Frames are blended
 var TemporalFilter bool = true;
-var TemporalFilterSamples int = 32;
+var TemporalFilterSamples int = 64;
 var Frames []*pixel.PictureData;
 
 //If true splits the image generation into threads
-var Multithreaded bool = true;
+var Multithreaded bool = false;
 var MultithreadedTheads int = 4;
 
 func run() {
@@ -133,17 +133,16 @@ func UpdateCamera(){
 
 func main() {
 	// Prepare the scene
-	Scene.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, -100.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.8, 0.8, 0.0))));
-	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, 0.0), hitable.NewLambertMaterial(vmath.NewVector3(0.8, 0.3, 0.3))));
-	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.6, 0.2), 0.4)));
-	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -2.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.8, 0.8), 0.2)));
+	Scene.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, -100.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.4, 0.7, 0.0))));
+	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, 0.0), hitable.NewLambertMaterial(vmath.NewVector3(0.3, 0.2, 0.9))));
+	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.6, 0.2), 0.0)));
+	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -2.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.8, 0.8), 0.5)));
 	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewDieletricMaterial(1.5)));
-
-	//Scene.Add(hitable.NewSphere(0.4, vmath.NewVector3(-1.0, 1.0, -1.0), hitable.NewDieletricMaterial(0.2)));
-	//Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewNormalMaterial()));
+	Scene.Add(hitable.NewSphere(0.4, vmath.NewVector3(-1.0, 1.0, -3.0), hitable.NewNormalMaterial()));
+	Scene.Add(hitable.NewSphere(0.3, vmath.NewVector3(-2.0, 2.0, -1.0), hitable.NewDieletricMaterial(0.2)));
 
 	// Start the renderer
-	pixelgl.Run(run)
+	pixelgl.Run(run);
 }
 
 // RaytraceImage the scene to calculate the color for a ray.
@@ -163,7 +162,7 @@ func RaytraceColor(ray *vmath.Ray, depth int64) *vmath.Vector3 {
 			// Ray was absorved return black
 			//return vmath.NewVector3(0, 0, 0);
 
-			//TODO <EXPERIMENT USING THE SCATTERED RAY VALUE>
+			// The ray was absorved use the last value
 			return attenuation.Clone();
 		}
 
@@ -189,58 +188,72 @@ func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
 	return a;
 }
 
+// Raytrace the picure in a thread and write it to the output object.
+func RaytraceThread(output *pixel.PictureData, u int, v int, width int, height int) {
+	// TODO <ADD CODE HERE>
+}
+
 //Render sky with raytrace
 func RaytraceImage(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
 	var size = bounds.Size();
-	var picture = pixel.MakePictureData(bounds);
+	var picture *pixel.PictureData = pixel.MakePictureData(bounds);
 
 	var nx int = int(size.X);
 	var ny int = int(size.Y);
 
-	for j := 0; j < ny; j++ {
-		for i := 0; i < nx; i++ {
-			var color *vmath.Vector3;
+	if Multithreaded {
+		//TODO <CALCULATE THREAD RANGE>
+		//TODO <CHECK HOW TO STORE RESULT>
+		go RaytraceThread(picture, 0, 0, nx, ny);
+	} else {
+		// Single threaded
+		for j := 0; j < ny; j++ {
+			for i := 0; i < nx; i++ {
+				var color *vmath.Vector3;
 
-			//If using antialiasing jitter the UV and cast multiple rays
-			if alialiasing {
-				var samples int = 16;
-				color = vmath.NewVector3(0, 0, 0);
+				//If using antialiasing jitter the UV and cast multiple rays
+				if alialiasing {
+					var samples int = 16;
+					color = vmath.NewVector3(0, 0, 0);
 
-				for k := 0; k < samples; k++ {
-					var u float64 = (float64(i) + rand.Float64()) / size.X;
-					var v float64 = (float64(j) + rand.Float64()) / size.Y;
-					color.Add(RaytraceColor(Camera.GetRay(u, v), 0));
-				}
+					for k := 0; k < samples; k++ {
+						var u float64 = (float64(i) + rand.Float64()) / size.X;
+						var v float64 = (float64(j) + rand.Float64()) / size.Y;
+						color.Add(RaytraceColor(Camera.GetRay(u, v), 0));
+					}
 
-				color.DivideScalar(float64(samples));
-			} else {
-				var u float64;
-				var v float64;
-
-				if TemporalFilter {
-					u = (float64(i) + rand.Float64()) / size.X;
-					v = (float64(j) + rand.Float64()) / size.Y;
+					color.DivideScalar(float64(samples));
 				} else {
-					u = float64(i) / size.X;
-					v = float64(j) / size.Y;
+					var u float64;
+					var v float64;
+
+					if TemporalFilter {
+						u = (float64(i) + rand.Float64()) / size.X;
+						v = (float64(j) + rand.Float64()) / size.Y;
+					} else {
+						u = float64(i) / size.X;
+						v = float64(j) / size.Y;
+					}
+
+					color = RaytraceColor(Camera.GetRay(u, v), 0);
 				}
 
-				color = RaytraceColor(Camera.GetRay(u, v), 0);
+				//Apply gamma
+				color.DivideScalar(1.0);
+				color.Sqrt();
+
+				color.MulScalar(255);
+
+				//Write to picture
+				var index = picture.Index(pixel.Vec{X:float64(i), Y:float64(j)});
+				picture.Pix[index].R = uint8(color.X);
+				picture.Pix[index].G = uint8(color.Y);
+				picture.Pix[index].B = uint8(color.Z);
 			}
-
-			//Apply gamma
-			color.DivideScalar(1.0);
-			color.Sqrt();
-
-			color.MulScalar(255);
-
-			//Write to picture
-			var index = picture.Index(pixel.Vec{X:float64(i), Y:float64(j)});
-			picture.Pix[index].R = uint8(color.X);
-			picture.Pix[index].G = uint8(color.Y);
-			picture.Pix[index].B = uint8(color.Z);
 		}
 	}
+
+
 
 	return picture;
 }
