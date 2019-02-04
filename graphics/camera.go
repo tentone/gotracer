@@ -57,7 +57,7 @@ func NewCameraBounds(bounds pixel.Rect) *Camera {
 	var c = new(Camera);
 	var size = bounds.Size();
 
-	c.Fov = 90;
+	c.Fov = 70;
 	c.AspectRatio = size.X / size.Y;
 	c.Position = vmath.NewVector3(-2.0, 2.0, 1.0);
 	c.LookAt = vmath.NewVector3(0.0, 0.0, -1.0);

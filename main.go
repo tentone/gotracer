@@ -24,7 +24,7 @@ var Camera *graphics.Camera;
 var MaxDepth int64 = 50;
 
 //If true the last n frames are blended
-var TemporalFilter bool = true;
+var TemporalFilter bool = false;
 var TemporalFilterSamples int = 64;
 
 //If true splits the image generation into threads
@@ -92,6 +92,24 @@ func run() {
 			sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()));
 		}
 
+		//Keyboard input
+		if window.Pressed(pixelgl.KeyLeft) {
+			Camera.Position.X += 0.1;
+			Camera.UpdateViewport();
+		}
+		if window.Pressed(pixelgl.KeyRight) {
+			Camera.Position.X -= 0.1;
+			Camera.UpdateViewport();
+		}
+		if window.Pressed(pixelgl.KeyDown) {
+			Camera.Position.Y -= 0.1;
+			Camera.UpdateViewport();
+		}
+		if window.Pressed(pixelgl.KeyUp) {
+			Camera.Position.Y += 0.1;
+			Camera.UpdateViewport();
+		}
+
 		window.Update();
 
 		var delta = time.Since(start);
@@ -101,13 +119,13 @@ func run() {
 
 func main() {
 	// Prepare the scene
-	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.8, 0.3, 0.3))));
 	Scene.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, -100.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.8, 0.8, 0.0))));
+	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, 0.0), hitable.NewLambertMaterial(vmath.NewVector3(0.8, 0.3, 0.3))));
 	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.6, 0.2), 0.4)));
+	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -2.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.8, 0.8), 0.2)));
 	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewDieletricMaterial(1.5)));
-	//Scene.Add(hitable.NewSphere(0.4, vmath.NewVector3(-1.0, 1.0, -1.0), hitable.NewDieletricMaterial(0.2)));
 
-	//Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.8, 0.8), 0.2)));
+	//Scene.Add(hitable.NewSphere(0.4, vmath.NewVector3(-1.0, 1.0, -1.0), hitable.NewDieletricMaterial(0.2)));
 	//Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewNormalMaterial()));
 
 	// Start the renderer
