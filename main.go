@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/faiface/pixel"
@@ -25,17 +26,17 @@ var MaxDepth int64 = 50;
 
 //If true the last n Frames are blended
 var TemporalFilter bool = true;
-var TemporalFilterSamples int = 64;
+var TemporalFilterSamples int = 16;
 var Frames []*pixel.PictureData;
 
 //If true splits the image generation into threads
-var Multithreaded bool = false;
+var Multithreaded bool = true;
 var MultithreadedTheads int = 4;
 
 func run() {
-	var width float64 = 640.0;
-	var height float64 = 480.0;
-	var upscale float64 = 1.0;
+	var width float64 = 320.0;
+	var height float64 = 240.0;
+	var upscale float64 = 2.0;
 
 	var bounds = pixel.R(0, 0, width, height);
 	var windowBounds = pixel.R(0, 0, width * upscale, height * upscale);
@@ -189,71 +190,77 @@ func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
 }
 
 // Raytrace the picure in a thread and write it to the output object.
-func RaytraceThread(output *pixel.PictureData, antialiasing bool, u int, v int, width int, height int) {
-	// TODO <ADD CODE HERE>
-}
+// The result is writen to the picture object passed as argument.
+func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, antialiasing bool, width float64, height float64, ix int, iy int, nx int, ny int) {
+	// Single threaded
+	for j := iy; j < ny; j++ {
+		for i := ix; i < nx; i++ {
+			var color *vmath.Vector3;
 
-//Render sky with raytrace
-func RaytraceImage(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
-	var size = bounds.Size();
-	var picture *pixel.PictureData = pixel.MakePictureData(bounds);
+			//If using antialiasing jitter the UV and cast multiple rays
+			if antialiasing {
+				var samples int = 16;
+				color = vmath.NewVector3(0, 0, 0);
 
-	var nx int = int(size.X);
-	var ny int = int(size.Y);
-
-	if Multithreaded {
-		//TODO <CALCULATE THREAD RANGE>
-		//TODO <CHECK HOW TO STORE RESULT>
-		go RaytraceThread(picture, alialiasing, 0, 0, nx, ny);
-	} else {
-		// Single threaded
-		for j := 0; j < ny; j++ {
-			for i := 0; i < nx; i++ {
-				var color *vmath.Vector3;
-
-				//If using antialiasing jitter the UV and cast multiple rays
-				if alialiasing {
-					var samples int = 16;
-					color = vmath.NewVector3(0, 0, 0);
-
-					for k := 0; k < samples; k++ {
-						var u float64 = (float64(i) + rand.Float64()) / size.X;
-						var v float64 = (float64(j) + rand.Float64()) / size.Y;
-						color.Add(RaytraceColor(Camera.GetRay(u, v), 0));
-					}
-
-					color.DivideScalar(float64(samples));
-				} else {
-					var u float64;
-					var v float64;
-
-					if TemporalFilter {
-						u = (float64(i) + rand.Float64()) / size.X;
-						v = (float64(j) + rand.Float64()) / size.Y;
-					} else {
-						u = float64(i) / size.X;
-						v = float64(j) / size.Y;
-					}
-
-					color = RaytraceColor(Camera.GetRay(u, v), 0);
+				for k := 0; k < samples; k++ {
+					var u float64 = (float64(i) + rand.Float64()) / width;
+					var v float64 = (float64(j) + rand.Float64()) / height;
+					color.Add(RaytraceColor(Camera.GetRay(u, v), 0));
 				}
 
-				//Apply gamma
-				color.DivideScalar(1.0);
-				color.Sqrt();
+				color.DivideScalar(float64(samples));
+			} else {
+				var u float64;
+				var v float64;
 
-				color.MulScalar(255);
+				if TemporalFilter {
+					u = (float64(i) + rand.Float64()) / width;
+					v = (float64(j) + rand.Float64()) / height;
+				} else {
+					u = float64(i) / width;
+					v = float64(j) / height;
+				}
 
-				//Write to picture
-				var index = picture.Index(pixel.Vec{X:float64(i), Y:float64(j)});
-				picture.Pix[index].R = uint8(color.X);
-				picture.Pix[index].G = uint8(color.Y);
-				picture.Pix[index].B = uint8(color.Z);
+				color = RaytraceColor(Camera.GetRay(u, v), 0);
 			}
+
+			//Apply gamma
+			color.DivideScalar(1.0);
+			color.Sqrt();
+
+			color.MulScalar(255);
+
+			//Write to picture
+			var index = picture.Index(pixel.Vec{X:float64(i), Y:float64(j)});
+			picture.Pix[index].R = uint8(color.X);
+			picture.Pix[index].G = uint8(color.Y);
+			picture.Pix[index].B = uint8(color.Z);
 		}
 	}
 
+	wg.Done();
+}
 
+//Render sky with raytrace
+func RaytraceImage(bounds pixel.Rect, antialiasing bool) *pixel.PictureData {
+	var size = bounds.Size();
+	var picture *pixel.PictureData = pixel.MakePictureData(bounds);
+	var nx int = int(size.X);
+	var ny int = int(size.Y);
+	var wg sync.WaitGroup;
+
+	if Multithreaded {
+		wg.Add(4);
+		go RaytraceThread(&wg, picture, antialiasing, size.X, size.Y, 0, 0, nx / 2, ny / 2);
+		go RaytraceThread(&wg, picture, antialiasing, size.X, size.Y, nx / 2, 0, nx, ny / 2);
+		go RaytraceThread(&wg, picture, antialiasing, size.X, size.Y, 0, ny / 2, nx / 2, ny);
+		go RaytraceThread(&wg, picture, antialiasing, size.X, size.Y, nx / 2, ny / 2, nx, ny);
+	} else {
+		wg.Add(1);
+		go RaytraceThread(&wg, picture, antialiasing, size.X, size.Y, 0, 0, nx, ny);
+	}
+
+	wg.Wait();
 
 	return picture;
 }
