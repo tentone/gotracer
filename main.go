@@ -18,7 +18,7 @@ import (
 );
 
 var Scene hitable.HitableList;
-var Camera *graphics.Camera;
+var Camera *graphics.CameraDefocus;
 
 // Max raytracing recursive depth
 var MaxDepth int64 = 50;
@@ -33,14 +33,14 @@ var Multithreaded bool = false;
 var MultithreadedTheads int = 4;
 
 func run() {
-	var width float64 = 320.0;
-	var height float64 = 240.0;
-	var upscale float64 = 2.0;
+	var width float64 = 640.0;
+	var height float64 = 480.0;
+	var upscale float64 = 1.0;
 
 	var bounds = pixel.R(0, 0, width, height);
 	var windowBounds = pixel.R(0, 0, width * upscale, height * upscale);
 
-	Camera = graphics.NewCameraBounds(bounds);
+	Camera = graphics.NewCameraDefocusBounds(bounds);
 
 	var config = pixelgl.WindowConfig{
 		Resizable: false,
@@ -189,7 +189,7 @@ func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
 }
 
 // Raytrace the picure in a thread and write it to the output object.
-func RaytraceThread(output *pixel.PictureData, u int, v int, width int, height int) {
+func RaytraceThread(output *pixel.PictureData, antialiasing bool, u int, v int, width int, height int) {
 	// TODO <ADD CODE HERE>
 }
 
@@ -204,7 +204,7 @@ func RaytraceImage(bounds pixel.Rect, alialiasing bool) *pixel.PictureData {
 	if Multithreaded {
 		//TODO <CALCULATE THREAD RANGE>
 		//TODO <CHECK HOW TO STORE RESULT>
-		go RaytraceThread(picture, 0, 0, nx, ny);
+		go RaytraceThread(picture, alialiasing, 0, 0, nx, ny);
 	} else {
 		// Single threaded
 		for j := 0; j < ny; j++ {

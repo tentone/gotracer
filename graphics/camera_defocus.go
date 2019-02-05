@@ -1,5 +1,6 @@
 package graphics;
 
+import "C"
 import (
 	"github.com/faiface/pixel"
 	"gotracer/vmath"
@@ -8,23 +9,29 @@ import (
 
 // Camera defocus is a camera that has support for defocus blur.
 type CameraDefocus struct {
-	*Camera;
+	Camera;
 
 	// Lens radius affects how much the rays can drift from the center.
 	LensRadius float64;
 
+	// Lens aperture.
+	Aperture float64;
+
+	// Distance to be in perfect focus of the camera.
+	FocusDistance float64;
+
 	U *vmath.Vector3;
-
 	V *vmath.Vector3;
-
 	W *vmath.Vector3;
 }
 
 // Create camera from bouding box
-func NewCameraDefocus (bounds pixel.Rect, position *vmath.Vector3, lookAt *vmath.Vector3, up *vmath.Vector3, fov float64) *CameraDefocus {
+func NewCameraDefocus (bounds pixel.Rect, position *vmath.Vector3, lookAt *vmath.Vector3, up *vmath.Vector3, fov float64, aperture float64, focusDistance float64) *CameraDefocus {
 	var c = new(CameraDefocus);
 	var size = bounds.Size();
 
+	c.Aperture = aperture;
+	c.FocusDistance = focusDistance;
 	c.Fov = fov;
 	c.AspectRatio = size.X / size.Y;
 	c.Position = position;
@@ -45,6 +52,11 @@ func NewCameraDefocusBounds(bounds pixel.Rect) *CameraDefocus {
 	c.Position = vmath.NewVector3(-2.0, 2.0, 1.0);
 	c.LookAt = vmath.NewVector3(0.0, 0.0, -1.0);
 	c.Up = vmath.NewVector3(0.0, 1.0, 0.0);
+	c.Aperture = 0.3;
+
+	var direction = c.Position.Clone()
+	direction.Sub(c.LookAt);
+	c.FocusDistance = direction.Length();
 	c.UpdateViewport();
 
 	return c;
@@ -54,19 +66,24 @@ func NewCameraDefocusBounds(bounds pixel.Rect) *CameraDefocus {
 func (c *CameraDefocus) UpdateViewport() {
 
 	var fovRad float64 = c.Fov * (math.Pi / 180.0);
-
 	var halfHeight float64 = math.Tan(fovRad / 2.0);
 	var halfWidth float64 = c.AspectRatio * halfHeight;
 
 	var direction *vmath.Vector3 = c.Position.Clone();
 	direction.Sub(c.LookAt);
 
-	var w *vmath.Vector3 = direction.UnitVector();
-	var u *vmath.Vector3 = vmath.Cross(c.Up, w);
-	var v *vmath.Vector3 = vmath.Cross(w, u);
+	c.LensRadius = c.Aperture / 2.0;
+	c.W = direction.UnitVector();
+	c.U = vmath.Cross(c.Up, c.W).UnitVector();
+	c.V = vmath.Cross(c.W, c.U);
 
-	u.MulScalar(halfWidth);
-	v.MulScalar(halfHeight);
+	var u *vmath.Vector3 = c.U.Clone();
+	var v *vmath.Vector3 = c.V.Clone();
+	var w *vmath.Vector3 = c.W.Clone();
+
+	u.MulScalar(halfWidth * c.FocusDistance);
+	v.MulScalar(halfHeight * c.FocusDistance);
+	w.MulScalar(c.FocusDistance);
 
 	c.LowerLeftCorner = c.Position.Clone();
 	c.LowerLeftCorner.Sub(u);
@@ -83,20 +100,30 @@ func (c *CameraDefocus) UpdateViewport() {
 // Get a ray from this camera, from a normalized UV screen coordinate.
 func (c *CameraDefocus) GetRay(u float64, v float64) *vmath.Ray {
 
-	var rd = vmath.RandomInUnitDisk();
+	var rd *vmath.Vector3 = vmath.RandomInUnitDisk();
 	rd.MulScalar(c.LensRadius);
 
-	var hor = c.Horizontal.Clone();
+	var offset *vmath.Vector3 = c.U.Clone();
+	offset.MulScalar(rd.X);
+
+	var vclone *vmath.Vector3 = c.V.Clone();
+	vclone.MulScalar(rd.Y);
+	offset.Add(vclone);
+
+	var hor *vmath.Vector3 = c.Horizontal.Clone();
 	hor.MulScalar(u);
 
-	var vert = c.Vertical.Clone();
+	var vert *vmath.Vector3 = c.Vertical.Clone();
 	vert.MulScalar(v);
 
-	var direction = c.LowerLeftCorner.Clone();
+	var direction *vmath.Vector3 = c.LowerLeftCorner.Clone();
 	direction.Add(hor);
 	direction.Add(vert);
 	direction.Sub(c.Position);
+	direction.Sub(offset);
 
-	return vmath.NewRay(c.Position, direction);
+	offset.Add(c.Position);
+
+	return vmath.NewRay(offset, direction);
 }
 
