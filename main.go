@@ -34,9 +34,9 @@ var Multithreaded bool = true;
 var MultithreadedTheads int = 4;
 
 func run() {
-	var width float64 = 320.0;
-	var height float64 = 240.0;
-	var upscale float64 = 2.0;
+	var width float64 = 640.0;
+	var height float64 = 480.0;
+	var upscale float64 = 1.0;
 
 	var bounds = pixel.R(0, 0, width, height);
 	var windowBounds = pixel.R(0, 0, width * upscale, height * upscale);
@@ -112,6 +112,14 @@ func run() {
 		}
 		if window.Pressed(pixelgl.KeyUp) {
 			Camera.Position.Y += 0.1;
+			UpdateCamera();
+		}
+		if window.Pressed(pixelgl.KeyW) {
+			Camera.Aperture += 0.1;
+			UpdateCamera();
+		}
+		if window.Pressed(pixelgl.KeyS) {
+			Camera.Aperture -= 0.1;
 			UpdateCamera();
 		}
 
@@ -192,14 +200,13 @@ func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
 // Raytrace the picure in a thread and write it to the output object.
 // The result is writen to the picture object passed as argument.
 func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, antialiasing bool, width float64, height float64, ix int, iy int, nx int, ny int) {
-	// Single threaded
 	for j := iy; j < ny; j++ {
 		for i := ix; i < nx; i++ {
 			var color *vmath.Vector3;
 
 			//If using antialiasing jitter the UV and cast multiple rays
 			if antialiasing {
-				var samples int = 16;
+				var samples int = 4;
 				color = vmath.NewVector3(0, 0, 0);
 
 				for k := 0; k < samples; k++ {
@@ -225,7 +232,7 @@ func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, antialiasing
 			}
 
 			//Apply gamma
-			color.DivideScalar(1.0);
+			//color.DivideScalar(1.0);
 			color.Sqrt();
 
 			color.MulScalar(255);
@@ -255,12 +262,11 @@ func RaytraceImage(bounds pixel.Rect, antialiasing bool) *pixel.PictureData {
 		go RaytraceThread(&wg, picture, antialiasing, size.X, size.Y, nx / 2, 0, nx, ny / 2);
 		go RaytraceThread(&wg, picture, antialiasing, size.X, size.Y, 0, ny / 2, nx / 2, ny);
 		go RaytraceThread(&wg, picture, antialiasing, size.X, size.Y, nx / 2, ny / 2, nx, ny);
+		wg.Wait();
 	} else {
 		wg.Add(1);
-		go RaytraceThread(&wg, picture, antialiasing, size.X, size.Y, 0, 0, nx, ny);
+		RaytraceThread(&wg, picture, antialiasing, size.X, size.Y, 0, 0, nx, ny);
 	}
-
-	wg.Wait();
 
 	return picture;
 }
