@@ -1,6 +1,9 @@
 package main;
 
 import (
+	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
+	"golang.org/x/image/colornames"
 	"log"
 	"math"
 	"math/rand"
@@ -9,17 +12,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/pixelgl"
-	"golang.org/x/image/colornames"
-
 	"gotracer/graphics"
 	"gotracer/hitable"
 	"gotracer/vmath"
 );
-
-var Scene hitable.HitableList;
-var Camera *graphics.CameraDefocus;
 
 // Max raytracing recursive depth
 var MaxDepth int64 = 50;
@@ -30,7 +26,7 @@ var TemporalFilterSamples int = 16;
 var Frames []*pixel.PictureData;
 
 //If true splits the image generation into threads
-var Multithreaded bool = true;
+var Multithreaded bool = false;
 var MultithreadedTheads int = 4;
 
 func run() {
@@ -41,7 +37,16 @@ func run() {
 	var bounds = pixel.R(0, 0, width, height);
 	var windowBounds = pixel.R(0, 0, width * upscale, height * upscale);
 
-	Camera = graphics.NewCameraDefocusBounds(bounds);
+	var scene hitable.HitableList;	// Prepare the scene
+	scene.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, -100.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.4, 0.7, 0.0))));
+	scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, 0.0), hitable.NewLambertMaterial(vmath.NewVector3(0.3, 0.2, 0.9))));
+	scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.6, 0.2), 0.0)));
+	scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -2.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.8, 0.8), 0.5)));
+	scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewDieletricMaterial(1.5)));
+	scene.Add(hitable.NewSphere(0.4, vmath.NewVector3(-1.0, 1.0, -3.0), hitable.NewNormalMaterial()));
+	scene.Add(hitable.NewSphere(0.3, vmath.NewVector3(-2.0, 2.0, -1.0), hitable.NewDieletricMaterial(0.2)));
+
+	var camera *graphics.CameraDefocus = graphics.NewCameraDefocusBounds(bounds);
 
 	var config = pixelgl.WindowConfig{
 		Resizable: false,
@@ -62,7 +67,7 @@ func run() {
 
 		window.Clear(colornames.Black);
 
-		var picture *pixel.PictureData = RaytraceImage(bounds, false);
+		var picture *pixel.PictureData = RaytraceImage(bounds, &scene, camera, TemporalFilter,false);
 		var sprite *pixel.Sprite;
 
 		if TemporalFilter {
@@ -99,73 +104,64 @@ func run() {
 
 		//Keyboard input
 		if window.Pressed(pixelgl.KeyRight) {
-			Camera.Position.X += 0.1;
-			UpdateCamera();
+			camera.Position.X += 0.1;
+			UpdateCamera(camera);
 		}
 		if window.Pressed(pixelgl.KeyLeft) {
-			Camera.Position.X -= 0.1;
-			UpdateCamera();
+			camera.Position.X -= 0.1;
+			UpdateCamera(camera);
 		}
 		if window.Pressed(pixelgl.KeyDown) {
-			Camera.Position.Y -= 0.1;
-			UpdateCamera();
+			camera.Position.Y -= 0.1;
+			UpdateCamera(camera);
 		}
 		if window.Pressed(pixelgl.KeyUp) {
-			Camera.Position.Y += 0.1;
-			UpdateCamera();
+			camera.Position.Y += 0.1;
+			UpdateCamera(camera);
 		}
 		if window.Pressed(pixelgl.KeyW) {
-			Camera.Aperture += 0.1;
-			UpdateCamera();
+			camera.Aperture += 0.1;
+			UpdateCamera(camera);
 		}
 		if window.Pressed(pixelgl.KeyS) {
-			Camera.Aperture -= 0.1;
-			UpdateCamera();
+			camera.Aperture -= 0.1;
+			UpdateCamera(camera);
 		}
 
 		window.Update();
-		delta = time.Since(start);
 
+		delta = time.Since(start);
 		log.Printf("Frame time %s", delta);
 	}
 }
 
 // Update the camera viewport
-func UpdateCamera(){
+func UpdateCamera(camera *graphics.CameraDefocus){
 
 	if TemporalFilter {
 		Frames = nil;
 	}
 
-	Camera.UpdateViewport();
+	camera.UpdateViewport();
 }
 
 func main() {
-	// Prepare the scene
-	Scene.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, -100.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.4, 0.7, 0.0))));
-	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, 0.0), hitable.NewLambertMaterial(vmath.NewVector3(0.3, 0.2, 0.9))));
-	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.6, 0.2), 0.0)));
-	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -2.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.8, 0.8), 0.5)));
-	Scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewDieletricMaterial(1.5)));
-	Scene.Add(hitable.NewSphere(0.4, vmath.NewVector3(-1.0, 1.0, -3.0), hitable.NewNormalMaterial()));
-	Scene.Add(hitable.NewSphere(0.3, vmath.NewVector3(-2.0, 2.0, -1.0), hitable.NewDieletricMaterial(0.2)));
-
 	// Start the renderer
 	pixelgl.Run(run);
 }
 
 // RaytraceImage the scene to calculate the color for a ray.
-func RaytraceColor(ray *vmath.Ray, depth int64) *vmath.Vector3 {
+func RaytraceColor(scene *hitable.HitableList, ray *vmath.Ray, depth int64) *vmath.Vector3 {
 	var hitRecord = hitable.NewHitRecord();
 
-	if Scene.Hit(ray, 0.001, math.MaxFloat64, hitRecord) {
+	if scene.Hit(ray, 0.001, math.MaxFloat64, hitRecord) {
 
 		var scattered *vmath.Ray = vmath.NewEmptyRay();
 		var attenuation *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
 
 		if depth < MaxDepth && hitRecord.Material.Scatter(ray, hitRecord, attenuation, scattered) {
 			var color = attenuation.Clone();
-			color.Mul(RaytraceColor(scattered.Clone(), depth + 1));
+			color.Mul(RaytraceColor(scene, scattered.Clone(), depth + 1));
 			return color;
 		} else {
 			// Ray was absorved return black
@@ -197,9 +193,32 @@ func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
 	return a;
 }
 
+//Render sky with raytrace
+func RaytraceImage(bounds pixel.Rect, scene *hitable.HitableList, camera *graphics.CameraDefocus, jitter bool, antialiasing bool) *pixel.PictureData {
+	var size = bounds.Size();
+	var picture *pixel.PictureData = pixel.MakePictureData(bounds);
+	var nx int = int(size.X);
+	var ny int = int(size.Y);
+	var wg sync.WaitGroup;
+
+	if Multithreaded {
+		wg.Add(4);
+		go RaytraceThread(&wg, picture, scene, camera, jitter, antialiasing, size.X, size.Y, 0, 0, nx / 2, ny / 2);
+		go RaytraceThread(&wg, picture, scene, camera, jitter, antialiasing, size.X, size.Y, nx / 2, 0, nx, ny / 2);
+		go RaytraceThread(&wg, picture, scene, camera, jitter, antialiasing, size.X, size.Y, 0, ny / 2, nx / 2, ny);
+		go RaytraceThread(&wg, picture, scene, camera, jitter, antialiasing, size.X, size.Y, nx / 2, ny / 2, nx, ny);
+		wg.Wait();
+	} else {
+		wg.Add(1);
+		RaytraceThread(&wg, picture, scene, camera, jitter, antialiasing, size.X, size.Y, 0, 0, nx, ny);
+	}
+
+	return picture;
+}
+
 // Raytrace the picure in a thread and write it to the output object.
 // The result is writen to the picture object passed as argument.
-func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, antialiasing bool, width float64, height float64, ix int, iy int, nx int, ny int) {
+func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *hitable.HitableList, camera *graphics.CameraDefocus, jitter bool, antialiasing bool, width float64, height float64, ix int, iy int, nx int, ny int) {
 	for j := iy; j < ny; j++ {
 		for i := ix; i < nx; i++ {
 			var color *vmath.Vector3;
@@ -212,7 +231,7 @@ func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, antialiasing
 				for k := 0; k < samples; k++ {
 					var u float64 = (float64(i) + rand.Float64()) / width;
 					var v float64 = (float64(j) + rand.Float64()) / height;
-					color.Add(RaytraceColor(Camera.GetRay(u, v), 0));
+					color.Add(RaytraceColor(scene, camera.GetRay(u, v), 0));
 				}
 
 				color.DivideScalar(float64(samples));
@@ -220,7 +239,7 @@ func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, antialiasing
 				var u float64;
 				var v float64;
 
-				if TemporalFilter {
+				if jitter {
 					u = (float64(i) + rand.Float64()) / width;
 					v = (float64(j) + rand.Float64()) / height;
 				} else {
@@ -228,7 +247,7 @@ func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, antialiasing
 					v = float64(j) / height;
 				}
 
-				color = RaytraceColor(Camera.GetRay(u, v), 0);
+				color = RaytraceColor(scene, camera.GetRay(u, v), 0);
 			}
 
 			//Apply gamma
@@ -246,29 +265,6 @@ func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, antialiasing
 	}
 
 	wg.Done();
-}
-
-//Render sky with raytrace
-func RaytraceImage(bounds pixel.Rect, antialiasing bool) *pixel.PictureData {
-	var size = bounds.Size();
-	var picture *pixel.PictureData = pixel.MakePictureData(bounds);
-	var nx int = int(size.X);
-	var ny int = int(size.Y);
-	var wg sync.WaitGroup;
-
-	if Multithreaded {
-		wg.Add(4);
-		go RaytraceThread(&wg, picture, antialiasing, size.X, size.Y, 0, 0, nx / 2, ny / 2);
-		go RaytraceThread(&wg, picture, antialiasing, size.X, size.Y, nx / 2, 0, nx, ny / 2);
-		go RaytraceThread(&wg, picture, antialiasing, size.X, size.Y, 0, ny / 2, nx / 2, ny);
-		go RaytraceThread(&wg, picture, antialiasing, size.X, size.Y, nx / 2, ny / 2, nx, ny);
-		wg.Wait();
-	} else {
-		wg.Add(1);
-		RaytraceThread(&wg, picture, antialiasing, size.X, size.Y, 0, 0, nx, ny);
-	}
-
-	return picture;
 }
 
 // Write the frame to a PPM file string
