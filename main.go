@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"runtime"
 
 	"gotracer/graphics"
 	"gotracer/hitable"
@@ -29,10 +30,12 @@ var TemporalFilterSamples int = 16;
 var Frames []*pixel.PictureData;
 
 //If true splits the image generation into threads
-var Multithreaded bool = false;
+var Multithreaded bool = true;
 var MultithreadedTheads int = 4;
 
 func main() {
+	runtime.GOMAXPROCS(8);
+
 	pixelgl.Run(run);
 }
 
