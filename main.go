@@ -20,6 +20,9 @@ import (
 // Max raytracing recursive depth
 var MaxDepth int64 = 50;
 
+//If true multiple rays are casted and blended for each pixel
+var Antialiasing bool = false;
+
 //If true the last n Frames are blended
 var TemporalFilter bool = true;
 var TemporalFilterSamples int = 16;
@@ -28,6 +31,10 @@ var Frames []*pixel.PictureData;
 //If true splits the image generation into threads
 var Multithreaded bool = false;
 var MultithreadedTheads int = 4;
+
+func main() {
+	pixelgl.Run(run);
+}
 
 func run() {
 	var width float64 = 640.0;
@@ -45,6 +52,9 @@ func run() {
 	scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewDieletricMaterial(1.5)));
 	scene.Add(hitable.NewSphere(0.4, vmath.NewVector3(-1.0, 1.0, -3.0), hitable.NewNormalMaterial()));
 	scene.Add(hitable.NewSphere(0.3, vmath.NewVector3(-2.0, 2.0, -1.0), hitable.NewDieletricMaterial(0.2)));
+
+	//Generate random scene
+
 
 	var camera *graphics.CameraDefocus = graphics.NewCameraDefocusBounds(bounds);
 
@@ -67,7 +77,7 @@ func run() {
 
 		window.Clear(colornames.Black);
 
-		var picture *pixel.PictureData = RaytraceImage(bounds, &scene, camera, TemporalFilter,false);
+		var picture *pixel.PictureData = Render(bounds, &scene, camera);
 		var sprite *pixel.Sprite;
 
 		if TemporalFilter {
@@ -145,56 +155,8 @@ func UpdateCamera(camera *graphics.CameraDefocus){
 	camera.UpdateViewport();
 }
 
-func main() {
-	// Start the renderer
-	pixelgl.Run(run);
-}
-
-// RaytraceImage the scene to calculate the color for a ray.
-func RaytraceColor(scene *hitable.HitableList, ray *vmath.Ray, depth int64) *vmath.Vector3 {
-	var hitRecord = hitable.NewHitRecord();
-
-	if scene.Hit(ray, 0.001, math.MaxFloat64, hitRecord) {
-
-		var scattered *vmath.Ray = vmath.NewEmptyRay();
-		var attenuation *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
-
-		if depth < MaxDepth && hitRecord.Material.Scatter(ray, hitRecord, attenuation, scattered) {
-			var color = attenuation.Clone();
-			color.Mul(RaytraceColor(scene, scattered.Clone(), depth + 1));
-			return color;
-		} else {
-			// Ray was absorved return black
-			//return vmath.NewVector3(0, 0, 0);
-
-			// The ray was absorved use the last value
-			return attenuation.Clone();
-		}
-
-	} else {
-
-		return BackgroundColor(ray);
-	}
-}
-
-// Calculate the background color from ray.
-func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
-	var unitDirection = r.Direction.UnitVector();
-	var t = 0.5 * (unitDirection.Y + 1.0);
-
-	var a = vmath.NewVector3(1.0, 1.0, 1.0);
-	a.MulScalar(1.0 - t);
-
-	var b = vmath.NewVector3(0.5, 0.7, 1.0);
-	b.MulScalar(t);
-
-	a.Add(b);
-
-	return a;
-}
-
-//Render sky with raytrace
-func RaytraceImage(bounds pixel.Rect, scene *hitable.HitableList, camera *graphics.CameraDefocus, jitter bool, antialiasing bool) *pixel.PictureData {
+//Render image the image
+func Render(bounds pixel.Rect, scene *hitable.HitableList, camera *graphics.CameraDefocus) *pixel.PictureData {
 	var size = bounds.Size();
 	var picture *pixel.PictureData = pixel.MakePictureData(bounds);
 	var nx int = int(size.X);
@@ -203,14 +165,14 @@ func RaytraceImage(bounds pixel.Rect, scene *hitable.HitableList, camera *graphi
 
 	if Multithreaded {
 		wg.Add(4);
-		go RaytraceThread(&wg, picture, scene, camera, jitter, antialiasing, size.X, size.Y, 0, 0, nx / 2, ny / 2);
-		go RaytraceThread(&wg, picture, scene, camera, jitter, antialiasing, size.X, size.Y, nx / 2, 0, nx, ny / 2);
-		go RaytraceThread(&wg, picture, scene, camera, jitter, antialiasing, size.X, size.Y, 0, ny / 2, nx / 2, ny);
-		go RaytraceThread(&wg, picture, scene, camera, jitter, antialiasing, size.X, size.Y, nx / 2, ny / 2, nx, ny);
+		go RaytraceThread(&wg, picture, scene, camera, MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, 0, 0, nx / 2, ny / 2);
+		go RaytraceThread(&wg, picture, scene, camera, MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, nx / 2, 0, nx, ny / 2);
+		go RaytraceThread(&wg, picture, scene, camera, MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, 0, ny / 2, nx / 2, ny);
+		go RaytraceThread(&wg, picture, scene, camera, MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, nx / 2, ny / 2, nx, ny);
 		wg.Wait();
 	} else {
 		wg.Add(1);
-		RaytraceThread(&wg, picture, scene, camera, jitter, antialiasing, size.X, size.Y, 0, 0, nx, ny);
+		RaytraceThread(&wg, picture, scene, camera, MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, 0, 0, nx, ny);
 	}
 
 	return picture;
@@ -218,7 +180,8 @@ func RaytraceImage(bounds pixel.Rect, scene *hitable.HitableList, camera *graphi
 
 // Raytrace the picure in a thread and write it to the output object.
 // The result is writen to the picture object passed as argument.
-func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *hitable.HitableList, camera *graphics.CameraDefocus, jitter bool, antialiasing bool, width float64, height float64, ix int, iy int, nx int, ny int) {
+// This method is intended to be called multiple threads.
+func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *hitable.HitableList, camera *graphics.CameraDefocus, depth int64, jitter bool, antialiasing bool, width float64, height float64, ix int, iy int, nx int, ny int) {
 	for j := iy; j < ny; j++ {
 		for i := ix; i < nx; i++ {
 			var color *vmath.Vector3;
@@ -231,7 +194,7 @@ func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *hitab
 				for k := 0; k < samples; k++ {
 					var u float64 = (float64(i) + rand.Float64()) / width;
 					var v float64 = (float64(j) + rand.Float64()) / height;
-					color.Add(RaytraceColor(scene, camera.GetRay(u, v), 0));
+					color.Add(RaytraceScene(scene, camera.GetRay(u, v), depth));
 				}
 
 				color.DivideScalar(float64(samples));
@@ -247,7 +210,7 @@ func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *hitab
 					v = float64(j) / height;
 				}
 
-				color = RaytraceColor(scene, camera.GetRay(u, v), 0);
+				color = RaytraceScene(scene, camera.GetRay(u, v), depth);
 			}
 
 			//Apply gamma
@@ -265,6 +228,52 @@ func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *hitab
 	}
 
 	wg.Done();
+}
+
+// Render the scene to calculate the color for a ray.
+// Receives the scene and the initial ray to be casted.
+// It is called recursively until the ray does not hit anything, it is absorved of depth reaches 0.
+func RaytraceScene(scene *hitable.HitableList, ray *vmath.Ray, depth int64) *vmath.Vector3 {
+	var hitRecord = hitable.NewHitRecord();
+
+	if scene.Hit(ray, 0.001, math.MaxFloat64, hitRecord) {
+
+		var scattered *vmath.Ray = vmath.NewEmptyRay();
+		var attenuation *vmath.Vector3 = vmath.NewVector3(0, 0, 0);
+
+		if depth > 0 && hitRecord.Material.Scatter(ray, hitRecord, attenuation, scattered) {
+			var color = attenuation.Clone();
+			color.Mul(RaytraceScene(scene, scattered.Clone(), depth - 1));
+			return color;
+		} else {
+			// Ray was absorved return black
+			//return vmath.NewVector3(0, 0, 0);
+
+			// The ray was absorved use the last value
+			return attenuation.Clone();
+		}
+
+	} else {
+
+		return BackgroundColor(ray);
+	}
+}
+
+// Calculate the background color from ray.
+// This method is used for multi threading.
+func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
+	var unitDirection = r.Direction.UnitVector();
+	var t = 0.5 * (unitDirection.Y + 1.0);
+
+	var a = vmath.NewVector3(1.0, 1.0, 1.0);
+	a.MulScalar(1.0 - t);
+
+	var b = vmath.NewVector3(0.5, 0.7, 1.0);
+	b.MulScalar(t);
+
+	a.Add(b);
+
+	return a;
 }
 
 // Write the frame to a PPM file string
