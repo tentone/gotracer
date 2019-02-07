@@ -17,7 +17,7 @@ import (
 );
 
 // Max raytracing recursive depth
-var MaxDepth int64 = 100;
+var MaxDepth int64 = 50;
 
 //If true multiple rays are casted and blended for each pixel
 var Antialiasing bool = false;
@@ -39,9 +39,9 @@ func main() {
 }
 
 func run() {
-	var width float64 = 320.0;
-	var height float64 = 240.0;
-	var upscale float64 = 2.0;
+	var width float64 = 800.0;
+	var height float64 = 480.0;
+	var upscale float64 = 1.0;
 
 	var bounds = pixel.R(0, 0, width, height);
 	var windowBounds = pixel.R(0, 0, width * upscale, height * upscale);
@@ -135,44 +135,46 @@ func run() {
 		}
 		sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()).Scaled(window.Bounds().Center(), upscale));
 
+		delta = time.Since(start);
+		log.Printf("Frame time %s", delta);
+
+		var speed float64 = 0.1 * delta.Seconds();
+
 		//Keyboard input
 		if window.Pressed(pixelgl.KeyRight) {
-			camera.Position.X += 0.1;
+			camera.Position.X += speed;
 			UpdateCamera(camera);
 		}
 		if window.Pressed(pixelgl.KeyLeft) {
-			camera.Position.X -= 0.1;
+			camera.Position.X -= speed;
 			UpdateCamera(camera);
 		}
 		if window.Pressed(pixelgl.KeyUp) {
-			camera.Position.Z -= 0.1;
+			camera.Position.Z -= speed;
 			UpdateCamera(camera);
 		}
 		if window.Pressed(pixelgl.KeyDown) {
-			camera.Position.Z += 0.1;
+			camera.Position.Z += speed;
 			UpdateCamera(camera);
 		}
 		if window.Pressed(pixelgl.KeyLeftControl) || window.Pressed(pixelgl.KeyRightControl) {
-			camera.Position.Y -= 0.1;
+			camera.Position.Y -= speed;
 			UpdateCamera(camera);
 		}
 		if window.Pressed(pixelgl.KeySpace) {
-			camera.Position.Y += 0.1;
+			camera.Position.Y += speed;
 			UpdateCamera(camera);
 		}
 		if window.Pressed(pixelgl.KeyW) {
-			camera.Aperture += 0.1;
+			camera.Aperture += speed;
 			UpdateCamera(camera);
 		}
 		if window.Pressed(pixelgl.KeyS) {
-			camera.Aperture -= 0.1;
+			camera.Aperture -= speed;
 			UpdateCamera(camera);
 		}
 
 		window.Update();
-
-		delta = time.Since(start);
-		log.Printf("Frame time %s", delta);
 	}
 }
 
