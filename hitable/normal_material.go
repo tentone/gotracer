@@ -22,3 +22,7 @@ func (m *NormalMaterial) Scatter(ray *vmath.Ray, hitRecord *HitRecord, attenuati
 
 	return true;
 }
+
+func (o *NormalMaterial) Clone() Material {
+	return new(NormalMaterial);
+}

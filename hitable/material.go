@@ -9,4 +9,7 @@ type Material interface {
 	// Produce a scattered ray (or say it absorbed the incident ray), if scattered, say how much the ray should be attenuated.
 	// The return value indicates if if the ray was scatered, if returned false we assume that the ray was absorved.
 	Scatter(ray *vmath.Ray, hitRecord *HitRecord, attenuation *vmath.Vector3, scattered *vmath.Ray) bool
+
+	// Clone object create a new object with the same properties.
+	Clone() Material
 }

@@ -4,6 +4,9 @@ import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
 	"golang.org/x/image/colornames"
+	"gotracer/graphics"
+	"gotracer/hitable"
+	"gotracer/vmath"
 	"log"
 	"math"
 	"math/rand"
@@ -11,11 +14,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"runtime"
-
-	"gotracer/graphics"
-	"gotracer/hitable"
-	"gotracer/vmath"
 );
 
 // Max raytracing recursive depth
@@ -32,28 +30,30 @@ var Frames []*pixel.PictureData;
 //If true splits the image generation into threads
 var Multithreaded bool = true;
 var MultithreadedTheads int = 4;
+var SceneCopies []*hitable.HitableList;
+var CameraCopies []*graphics.CameraDefocus;
 
 func main() {
-	runtime.GOMAXPROCS(8);
-
+	//runtime.GOMAXPROCS(8);
 	pixelgl.Run(run);
 }
 
 func run() {
-	var width float64 = 1280.0;
-	var height float64 = 720.0;
-	var upscale float64 = 1.0;
+	var width float64 = 320.0;
+	var height float64 = 240.0;
+	var upscale float64 = 2.0;
 
 	var bounds = pixel.R(0, 0, width, height);
 	var windowBounds = pixel.R(0, 0, width * upscale, height * upscale);
 
-	var scene hitable.HitableList;	// Prepare the scene
+	// Prepare the scene
+	var scene *hitable.HitableList = hitable.NewHitableList();
 	scene.Add(hitable.NewSphere(500.0, vmath.NewVector3(0.0, -500.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.4, 0.7, 0.0))));
 	scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -3.0), hitable.NewNormalMaterial()));
-	scene.Add(hitable.NewSphere(1.5, vmath.NewVector3(-1.0, 1.0, 1.0), hitable.NewDieletricMaterial(1.3, vmath.NewVector3(0.90, 0.90, 0.90))));
-	scene.Add(hitable.NewSphere(1.5, vmath.NewVector3(-3.0, 1.0, -3.0), hitable.NewMetalMaterial(vmath.NewVector3(0.6, 0.6, 0.6), 0.1)));
+	scene.Add(hitable.NewSphere(1.5, vmath.NewVector3(5.0, 1.0, -6.0), hitable.NewDieletricMaterial(1.3, vmath.NewVector3(0.90, 0.90, 0.90))));
+	scene.Add(hitable.NewSphere(1.5, vmath.NewVector3(-1.0, 1.0, -3.0), hitable.NewMetalMaterial(vmath.NewVector3(0.6, 0.6, 0.6), 0.1)));
 
-	//Generate random scene
+	// Place random objects
 	for i := 0; i < 50; i++ {
 
 		var min float64 = 15.0;
@@ -74,6 +74,13 @@ func run() {
 
 	var camera *graphics.CameraDefocus = graphics.NewCameraDefocusBounds(bounds);
 
+	if Multithreaded {
+		for i := 0; i < MultithreadedTheads; i++ {
+			SceneCopies = append(SceneCopies, scene.Clone());
+			CameraCopies = append(CameraCopies, camera.Clone());
+		}
+	}
+
 	var config = pixelgl.WindowConfig{
 		Resizable: false,
 		Undecorated: false,
@@ -93,7 +100,7 @@ func run() {
 
 		window.Clear(colornames.Black);
 
-		var picture *pixel.PictureData = Render(bounds, &scene, camera);
+		var picture *pixel.PictureData = Render(bounds, scene, camera);
 		var sprite *pixel.Sprite;
 
 		if TemporalFilter {
@@ -176,7 +183,16 @@ func UpdateCamera(camera *graphics.CameraDefocus){
 		Frames = nil;
 	}
 
-	camera.UpdateViewport();
+	if Multithreaded {
+		for i := 0; i < MultithreadedTheads; i++ {
+			CameraCopies[i].Copy(camera);
+			CameraCopies[i].UpdateViewport();
+		}
+	} else {
+		camera.UpdateViewport();
+	}
+
+
 }
 
 //Render image the image
@@ -188,11 +204,14 @@ func Render(bounds pixel.Rect, scene *hitable.HitableList, camera *graphics.Came
 	var wg sync.WaitGroup;
 
 	if Multithreaded {
-		wg.Add(4);
-		go RaytraceThread(&wg, picture, scene, camera, MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, 0, 0, nx / 2, ny / 2);
-		go RaytraceThread(&wg, picture, scene, camera, MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, nx / 2, 0, nx, ny / 2);
-		go RaytraceThread(&wg, picture, scene, camera, MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, 0, ny / 2, nx / 2, ny);
-		go RaytraceThread(&wg, picture, scene, camera, MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, nx / 2, ny / 2, nx, ny);
+		wg.Add(MultithreadedTheads);
+		var wtx = nx / MultithreadedTheads;
+		var itx = 0;
+		for i := 0; i < MultithreadedTheads; i++ {
+			go RaytraceThread(&wg, picture, SceneCopies[i], CameraCopies[i], MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, itx, 0, itx + wtx, ny);
+			itx += wtx;
+		}
+
 		wg.Wait();
 	} else {
 		wg.Add(1);

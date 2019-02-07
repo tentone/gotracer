@@ -4,21 +4,31 @@
  - Images can be previewed directly on the window as they are generated.
  - Interation can be done using keys from the keyboard, to control the camera.
  
-## Screenshot
- - TODO
+## Screenshots
+![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/a.png)![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/b.png)
 
+## Performance
+ - To improve performance multi-threading was added to the renderer.
+ - Data had to be reordered for go to actually scale properly with multiple threads.
+ - Calling multiple goroutines that use that same data cause them to lock on each other to access data and the performance gains are minimal.
+ - Tests were performed with 154 objects in the render scene.
+ - Here are the base performance number for a single thread on my i5 6500 with DDR3 memory.
+    - 320x240 averaged 430ms per frame
+    - 640x480 averaged 1750ms per frame
+ - Just by splitting the work by multiple goroutines (4 threads)
+    - 320x240 averaged 220ms per frame (1.95x faster)
+    - 640x480 averaged 650ms per frame (2.69x faster)
+ - Just by making explicit object copies for each thread (4 threads)
+    - 320x240 averaged 120ms per frame (3.58x faster)
+    - 640x480 averaged 620ms per frame (3.64x faster)
+    
 ## Features
- - Geometries
-    - Sphere
- - Materials
-    - Dieletrics
-    - Lambert
-    - Metal
-    - Normal materials
+ - Geometries (Sphere)
+ - Materials (Dieletrics, Lambert, Metal, Normal).
+ - Camera defocus
  - Filtering
     - Antialiased image from ray jittering.
-    - Temporal accomulation from partially raytraced images.
-    - Noise filtering TODO
+    - Temporal accomulation from single ray raytraced images.
 
 ## Build
  - Install golang development tools

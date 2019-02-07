@@ -27,3 +27,9 @@ func (m *LambertMaterial) Scatter(ray *vmath.Ray, hitRecord *HitRecord, attenuat
 
 	return true;
 }
+
+func (o *LambertMaterial) Clone() Material {
+	var m = new(LambertMaterial);
+	m.Albedo = o.Albedo.Clone();
+	return m;
+}

@@ -70,3 +70,10 @@ func (m *DieletricMaterial) Scatter(ray *vmath.Ray, hitRecord *HitRecord, attenu
 
 	return true;
 }
+
+func (o *DieletricMaterial) Clone() Material {
+	var m = new(DieletricMaterial);
+	m.Albedo = o.Albedo.Clone();
+	m.RefractiveIndice = o.RefractiveIndice;
+	return m;
+}

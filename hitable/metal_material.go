@@ -35,3 +35,10 @@ func (m *MetalMaterial) Scatter(ray *vmath.Ray, hitRecord *HitRecord, attenuatio
 
 	return vmath.Dot(scattered.Direction, hitRecord.Normal) > 0;
 }
+
+func (o *MetalMaterial) Clone() Material {
+	var m = new(MetalMaterial);
+	m.Albedo = o.Albedo.Clone();
+	m.Fuzz = o.Fuzz;
+	return m;
+}

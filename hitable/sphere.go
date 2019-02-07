@@ -66,6 +66,6 @@ func (o *Sphere) Clone() Hitable {
 	var s = new(Sphere);
 	s.Radius = o.Radius;
 	s.Center = o.Center.Clone();
-	s.Material = o.Material; //o.Material.Clone();
+	s.Material = o.Material.Clone();
 	return s;
 }

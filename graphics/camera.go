@@ -113,3 +113,23 @@ func (c *Camera) GetRay(u float64, v float64) *vmath.Ray {
 	return vmath.NewRay(c.Position, direction);
 }
 
+// Copy data from another camera object
+func (c *Camera) Copy(o *Camera) {
+	c.Fov = o.Fov;
+	c.AspectRatio = o.AspectRatio;
+	c.Position.Copy(o.Position);
+	c.LookAt.Copy(o.LookAt);
+	c.Up.Copy(o.Up);
+}
+
+// Clone the camera object
+func (o *Camera) Clone() *Camera {
+	var c = new(Camera);
+	c.Fov = o.Fov;
+	c.AspectRatio = o.AspectRatio;
+	c.Position = o.Position.Clone();
+	c.LookAt = o.LookAt.Clone();
+	c.Up = o.Up.Clone();
+	c.UpdateViewport();
+	return c;
+}
