@@ -8,16 +8,23 @@ import (
 // Dielectric material allow light to pass trough them.
 // When a light ray hits them, it splits into a reflected ray and a refracted (transmitted) ray.
 type DieletricMaterial struct {
+
+	// Refractive indice of the dielectric material.
+	// Used to calculate the ray refraction using the snell law.
 	RefractiveIndice float64;
+
+	// Albedo represents the color of the material.
+	Albedo *vmath.Vector3;
 }
 
-func NewDieletricMaterial (refractiveIndice float64) *DieletricMaterial  {
+func NewDieletricMaterial (refractiveIndice float64, albedo *vmath.Vector3) *DieletricMaterial  {
 	var m = new(DieletricMaterial);
 	m.RefractiveIndice = refractiveIndice;
+	m.Albedo = albedo;
 	return m;
 }
 
-// Refractive indice of the air.
+// Refractive indice of the air is 1.0
 var AirRefractiveIndice = 1.0;
 
 func (m *DieletricMaterial) Scatter(ray *vmath.Ray, hitRecord *HitRecord, attenuation *vmath.Vector3, scattered *vmath.Ray) bool {
@@ -29,7 +36,8 @@ func (m *DieletricMaterial) Scatter(ray *vmath.Ray, hitRecord *HitRecord, attenu
 	var reflectionProbe float64;
 	var cosine float64;
 
-	attenuation.Set(1.0, 1.0, 1.0);
+	//attenuation.Set(1.0, 1.0, 1.0);
+	attenuation.Copy(m.Albedo);
 
 	var dot float64 = vmath.Dot(ray.Direction, hitRecord.Normal);
 

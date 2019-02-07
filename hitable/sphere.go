@@ -62,3 +62,10 @@ func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, rec *HitRecord)
 	return false;
 }
 
+func (o *Sphere) Clone() Hitable {
+	var s = new(Sphere);
+	s.Radius = o.Radius;
+	s.Center = o.Center.Clone();
+	s.Material = o.Material; //o.Material.Clone();
+	return s;
+}

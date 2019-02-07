@@ -24,16 +24,25 @@ func (hl *HitableList) Hit(r *vmath.Ray, tmin float64, tmax float64, rec *HitRec
 	var hitAnything bool = false;
 	var closestSoFar float64 = tmax;
 	var tempRec *HitRecord = NewHitRecord();
-	var i int = 0;
 
-	for i < len(hl.List) {
+	for i := 0; i < len(hl.List); i++ {
 		if hl.List[i].Hit(r, tmin, closestSoFar, tempRec) {
 			hitAnything = true;
 			closestSoFar = tempRec.T;
 			rec.Copy(tempRec);
 		}
-		i++;
 	}
 
 	return hitAnything;
+}
+
+// Clone the hitable list and the objects in the list
+func (hl *HitableList) Clone() *HitableList {
+	var l = NewHitableList();
+
+	for i := 0; i < len(hl.List); i++ {
+		l.Add(hl.List[i].Clone());
+	}
+
+	return l;
 }

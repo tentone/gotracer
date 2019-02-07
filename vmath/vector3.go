@@ -27,6 +27,11 @@ func NewEmptyVector3() *Vector3 {
 	return new(Vector3);
 }
 
+// Create new empty vector3 with values.
+func NewRandomVector3(min float64, max float64) *Vector3 {
+	var delta float64 = max - min;
+	return NewVector3(rand.Float64() * delta + min, rand.Float64() * delta + min, rand.Float64() * delta + min);
+}
 
 // Set value of the vector.
 func (v *Vector3) Set(x float64, y float64, z float64) {

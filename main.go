@@ -22,7 +22,7 @@ import (
 var MaxDepth int64 = 50;
 
 //If true multiple rays are casted and blended for each pixel
-var Antialiasing bool = false;
+var Antialiasing bool = true;
 
 //If true the last n Frames are blended
 var TemporalFilter bool = true;
@@ -40,24 +40,43 @@ func main() {
 }
 
 func run() {
-	var width float64 = 640.0;
-	var height float64 = 480.0;
+	var width float64 = 1280.0;
+	var height float64 = 720.0;
 	var upscale float64 = 1.0;
 
 	var bounds = pixel.R(0, 0, width, height);
 	var windowBounds = pixel.R(0, 0, width * upscale, height * upscale);
 
 	var scene hitable.HitableList;	// Prepare the scene
-	scene.Add(hitable.NewSphere(100.0, vmath.NewVector3(0.0, -100.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.4, 0.7, 0.0))));
-	scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, 0.0), hitable.NewLambertMaterial(vmath.NewVector3(0.3, 0.2, 0.9))));
+	scene.Add(hitable.NewSphere(500.0, vmath.NewVector3(0.0, -500.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.4, 0.7, 0.0))));
+	scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -3.0), hitable.NewNormalMaterial()));
+
+	scene.Add(hitable.NewSphere(1, vmath.NewVector3(-1.0, 0.5, 1.0), hitable.NewDieletricMaterial(1.3, vmath.NewVector3(0.90, 0.90, 0.90))));
+	scene.Add(hitable.NewSphere(1, vmath.NewVector3(-3.0, 0.5, -3.0), hitable.NewMetalMaterial(vmath.NewVector3(0.6, 0.6, 0.6), 0.1)));
+
+	/*scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, 0.0), hitable.NewLambertMaterial(vmath.NewVector3(0.3, 0.2, 0.9))));
 	scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.6, 0.2), 0.0)));
 	scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -2.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.8, 0.8), 0.5)));
-	scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -1.0), hitable.NewDieletricMaterial(1.5)));
-	scene.Add(hitable.NewSphere(0.4, vmath.NewVector3(-1.0, 1.0, -3.0), hitable.NewNormalMaterial()));
-	scene.Add(hitable.NewSphere(0.3, vmath.NewVector3(-2.0, 2.0, -1.0), hitable.NewDieletricMaterial(0.2)));
+	scene.Add(hitable.NewSphere(0.3, vmath.NewVector3(-2.0, 2.0, -1.0), hitable.NewDieletricMaterial(0.2)));*/
 
 	//Generate random scene
+	for i := 0; i < 50; i++ {
 
+		var min float64 = 15.0;
+		var distance float64 = 30.0;
+
+		var radius float64 = 0.4 + rand.Float64() * 0.2;
+		var position *vmath.Vector3 = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min);
+		scene.Add(hitable.NewSphere(radius, position, hitable.NewLambertMaterial(vmath.NewRandomVector3(0.1, 1))));
+
+		radius = 0.4 + rand.Float64() * 0.2;
+		position = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min);
+		scene.Add(hitable.NewSphere(radius, position, hitable.NewMetalMaterial(vmath.NewRandomVector3(0.1, 1), rand.Float64())));
+
+		radius = 0.4 + rand.Float64() * 0.2;
+		position = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min);
+		scene.Add(hitable.NewSphere(radius, position, hitable.NewDieletricMaterial(2.0 * rand.Float64(), vmath.NewRandomVector3(0.95, 1.0))));
+	}
 
 	var camera *graphics.CameraDefocus = graphics.NewCameraDefocusBounds(bounds);
 
@@ -124,11 +143,19 @@ func run() {
 			camera.Position.X -= 0.1;
 			UpdateCamera(camera);
 		}
+		if window.Pressed(pixelgl.KeyUp) {
+			camera.Position.Z -= 0.1;
+			UpdateCamera(camera);
+		}
 		if window.Pressed(pixelgl.KeyDown) {
+			camera.Position.Z += 0.1;
+			UpdateCamera(camera);
+		}
+		if window.Pressed(pixelgl.KeyLeftControl) || window.Pressed(pixelgl.KeyRightControl) {
 			camera.Position.Y -= 0.1;
 			UpdateCamera(camera);
 		}
-		if window.Pressed(pixelgl.KeyUp) {
+		if window.Pressed(pixelgl.KeySpace) {
 			camera.Position.Y += 0.1;
 			UpdateCamera(camera);
 		}
@@ -191,7 +218,7 @@ func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *hitab
 
 			//If using antialiasing jitter the UV and cast multiple rays
 			if antialiasing {
-				var samples int = 4;
+				var samples int = 64;
 				color = vmath.NewVector3(0, 0, 0);
 
 				for k := 0; k < samples; k++ {
