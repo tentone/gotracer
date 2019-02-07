@@ -19,14 +19,14 @@ import (
 );
 
 // Max raytracing recursive depth
-var MaxDepth int64 = 50;
+var MaxDepth int64 = 100;
 
 //If true multiple rays are casted and blended for each pixel
-var Antialiasing bool = true;
+var Antialiasing bool = false;
 
 //If true the last n Frames are blended
 var TemporalFilter bool = true;
-var TemporalFilterSamples int = 16;
+var TemporalFilterSamples int = 64;
 var Frames []*pixel.PictureData;
 
 //If true splits the image generation into threads
@@ -50,14 +50,8 @@ func run() {
 	var scene hitable.HitableList;	// Prepare the scene
 	scene.Add(hitable.NewSphere(500.0, vmath.NewVector3(0.0, -500.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.4, 0.7, 0.0))));
 	scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -3.0), hitable.NewNormalMaterial()));
-
-	scene.Add(hitable.NewSphere(1, vmath.NewVector3(-1.0, 0.5, 1.0), hitable.NewDieletricMaterial(1.3, vmath.NewVector3(0.90, 0.90, 0.90))));
-	scene.Add(hitable.NewSphere(1, vmath.NewVector3(-3.0, 0.5, -3.0), hitable.NewMetalMaterial(vmath.NewVector3(0.6, 0.6, 0.6), 0.1)));
-
-	/*scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(0.0, 0.0, 0.0), hitable.NewLambertMaterial(vmath.NewVector3(0.3, 0.2, 0.9))));
-	scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(1.0, 0.0, -1.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.6, 0.2), 0.0)));
-	scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -2.0), hitable.NewMetalMaterial(vmath.NewVector3(0.8, 0.8, 0.8), 0.5)));
-	scene.Add(hitable.NewSphere(0.3, vmath.NewVector3(-2.0, 2.0, -1.0), hitable.NewDieletricMaterial(0.2)));*/
+	scene.Add(hitable.NewSphere(1.5, vmath.NewVector3(-1.0, 1.0, 1.0), hitable.NewDieletricMaterial(1.3, vmath.NewVector3(0.90, 0.90, 0.90))));
+	scene.Add(hitable.NewSphere(1.5, vmath.NewVector3(-3.0, 1.0, -3.0), hitable.NewMetalMaterial(vmath.NewVector3(0.6, 0.6, 0.6), 0.1)));
 
 	//Generate random scene
 	for i := 0; i < 50; i++ {
@@ -218,7 +212,7 @@ func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *hitab
 
 			//If using antialiasing jitter the UV and cast multiple rays
 			if antialiasing {
-				var samples int = 64;
+				var samples int = 4;
 				color = vmath.NewVector3(0, 0, 0);
 
 				for k := 0; k < samples; k++ {
