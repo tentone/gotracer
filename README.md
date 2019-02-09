@@ -1,8 +1,7 @@
 # Gotracer
  - Software Raytracer written in golang.
- - Based on Ray Tracing In One Weekend by Peter Shirley
- - Images can be previewed directly on the window as they are generated.
- - Interation can be done using keys from the keyboard, to control the camera.
+ - Images can be previewed directly on the window as they are rendered.
+ - Interaction can be done using keys from the keyboard, to control the camera.
  
 ## Screenshots
 ![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/a.png)![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/b.png)
@@ -23,9 +22,9 @@
     - 640x480 averaged 620ms per frame (3.64x faster)
     
 ## Features
- - Geometries (Sphere)
+ - Geometries (Sphere, Box).
  - Materials (Dieletrics, Lambert, Metal, Normal).
- - Camera defocus
+ - Camera defocus.
  - Filtering
     - Antialiased image from ray jittering.
     - Temporal accomulation from single ray raytraced images.
@@ -46,3 +45,7 @@
     - https://godoc.org/github.com/faiface/pixel/pixelgl
     - https://github.com/faiface/pixel/wiki/Creating-a-Window
     - https://godoc.org/github.com/faiface/pixel#PictureData
+
+## References
+ - Raytracer in a Weekend (Peter Shirley)
+ - An efficient and robust ray-box intersection algorithm (2003) (Amy Williams , Steve Barrus , R. Keith , Morley Peter Shirley)

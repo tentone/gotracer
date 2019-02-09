@@ -6,8 +6,13 @@ import "math"
 // Sphere is hitable object represented by a center point and a radius.
 // The sphere object has a material attached to it.
 type Sphere struct {
+	// Radius of the sphere
 	Radius float64;
+
+	// Center position of the sphere
 	Center *vmath.Vector3;
+
+	// Material used to render the sphere.
 	Material Material;
 }
 
@@ -19,7 +24,7 @@ func NewSphere(radius float64, center *vmath.Vector3, material Material) *Sphere
 	return s;
 }
 
-func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, rec *HitRecord) bool {
+func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *HitRecord) bool {
 
 	var oc = ray.Origin.Clone();
 	oc.Sub(s.Center);
@@ -35,12 +40,12 @@ func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, rec *HitRecord)
 		var temp float64 = (-b - math.Sqrt(discriminant)) / a;
 
 		if temp < tmax && temp > tmin {
-			rec.T = temp;
-			rec.P = ray.PointAtParameter(temp);
-			rec.Normal = rec.P.Clone();
-			rec.Normal.Sub(s.Center);
-			rec.Normal.DivideScalar(s.Radius);
-			rec.Material = s.Material;
+			hitRecord.T = temp;
+			hitRecord.P = ray.PointAtParameter(temp);
+			hitRecord.Normal = hitRecord.P.Clone();
+			hitRecord.Normal.Sub(s.Center);
+			hitRecord.Normal.DivideScalar(s.Radius);
+			hitRecord.Material = s.Material;
 			return true;
 		}
 
@@ -48,12 +53,12 @@ func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, rec *HitRecord)
 		temp = (-b + math.Sqrt(discriminant)) / a;
 		
 		if temp < tmax && temp > tmin {
-			rec.T = temp;
-			rec.P = ray.PointAtParameter(temp);
-			rec.Normal = rec.P.Clone();
-			rec.Normal.Sub(s.Center);
-			rec.Normal.DivideScalar(s.Radius);
-			rec.Material = s.Material;
+			hitRecord.T = temp;
+			hitRecord.P = ray.PointAtParameter(temp);
+			hitRecord.Normal = hitRecord.P.Clone();
+			hitRecord.Normal.Sub(s.Center);
+			hitRecord.Normal.DivideScalar(s.Radius);
+			hitRecord.Material = s.Material;
 			return true;
 		}
 		
