@@ -4,7 +4,7 @@
  - Interaction can be done using keys from the keyboard, to control the camera.
  
 ## Screenshots
-![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/a.png)![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/b.png)[alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/c.png)
+![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/a.png)![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/b.png)![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/c.png)
 
 ## Performance
  - To improve performance multi-threading was added to the renderer.

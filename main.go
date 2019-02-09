@@ -39,8 +39,8 @@ func main() {
 }
 
 func run() {
-	var width float64 = 800.0;
-	var height float64 = 480.0;
+	var width float64 = 320.0;
+	var height float64 = 240.0;
 	var upscale float64 = 1.0;
 
 	var bounds = pixel.R(0, 0, width, height);
