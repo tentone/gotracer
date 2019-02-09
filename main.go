@@ -53,16 +53,14 @@ func run() {
 	scene.Add(hitable.NewSphere(1.5, vmath.NewVector3(5.0, 1.0, -6.0), hitable.NewDieletricMaterial(1.3, vmath.NewVector3(0.90, 0.90, 0.90))));
 	scene.Add(hitable.NewSphere(1.5, vmath.NewVector3(-1.0, 1.0, -3.0), hitable.NewMetalMaterial(vmath.NewVector3(0.6, 0.6, 0.6), 0.1)));
 
-	// Place random objects
-	for i := 0; i < 50; i++ {
+	var min float64 = 15.0;
+	var distance float64 = 30.0;
 
-		var min float64 = 15.0;
-		var distance float64 = 30.0;
-
+	// Place random sphere objects
+	for i := 0; i < 40; i++ {
 		var radius float64 = 0.4 + rand.Float64() * 0.2;
 		var position *vmath.Vector3 = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min);
-		//scene.Add(hitable.NewSphere(radius, position, hitable.NewLambertMaterial(vmath.NewRandomVector3(0.1, 1))));
-		scene.Add(hitable.NewSphere(radius, position, hitable.NewEmissiveMaterial(vmath.NewRandomVector3(0.1, 1), 3.0)));
+		scene.Add(hitable.NewSphere(radius, position, hitable.NewLambertMaterial(vmath.NewRandomVector3(0.1, 1))));
 
 		radius = 0.4 + rand.Float64() * 0.2;
 		position = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min);
@@ -71,6 +69,25 @@ func run() {
 		radius = 0.4 + rand.Float64() * 0.2;
 		position = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min);
 		scene.Add(hitable.NewSphere(radius, position, hitable.NewDieletricMaterial(2.0 * rand.Float64(), vmath.NewRandomVector3(0.95, 1.0))));
+	}
+
+	var halfSize = vmath.NewVector3(0.5, 0.5, 0.5);
+
+	//Place random box objects
+	for i := 0; i < 10; i++ {
+		var position * vmath.Vector3 = vmath.NewVector3(rand.Float64() * distance - min, halfSize.Y - 0.5, rand.Float64()*distance-min);
+		var bmin *vmath.Vector3 = position.Clone();
+		bmin.Sub(halfSize);
+		var bmax *vmath.Vector3 = position.Clone();
+		bmax.Add(halfSize);
+		scene.Add(hitable.NewBox(bmin, bmax, hitable.NewLambertMaterial(vmath.NewRandomVector3(0.1, 1))));
+
+		position = vmath.NewVector3(rand.Float64() * distance - min, halfSize.Y - 0.5, rand.Float64()*distance-min);
+		bmin = position.Clone();
+		bmin.Sub(halfSize);
+		bmax = position.Clone();
+		bmax.Add(halfSize);
+		scene.Add(hitable.NewBox(bmin, bmax, hitable.NewMetalMaterial(vmath.NewRandomVector3(0.6, 1), 0.0)));
 	}
 
 	var camera *graphics.CameraDefocus = graphics.NewCameraDefocusBounds(bounds);
@@ -139,7 +156,7 @@ func run() {
 		delta = time.Since(start);
 		log.Printf("Frame time %s", delta);
 
-		var speed float64 = 0.1 * delta.Seconds();
+		var speed float64 = 1.0 * delta.Seconds();
 
 		//Keyboard input
 		if window.Pressed(pixelgl.KeyRight) {
@@ -167,11 +184,11 @@ func run() {
 			UpdateCamera(camera);
 		}
 		if window.Pressed(pixelgl.KeyW) {
-			camera.Aperture += speed;
+			camera.Aperture += 0.1;
 			UpdateCamera(camera);
 		}
 		if window.Pressed(pixelgl.KeyS) {
-			camera.Aperture -= speed;
+			camera.Aperture -= 0.1;
 			UpdateCamera(camera);
 		}
 

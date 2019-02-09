@@ -26,14 +26,17 @@ func NewBox(min *vmath.Vector3, max *vmath.Vector3, material Material) *Box {
 
 func (box *Box) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *HitRecord) bool {
 
-	var normal *vmath.Vector3 = vmath.NewVector3(0, 0, 1);
 	var txmin float64 = (box.Min.X - ray.Origin.X) / ray.Direction.X;
 	var txmax  float64 = (box.Max.X - ray.Origin.X) / ray.Direction.X;
+
+	var normal *vmath.Vector3 = vmath.NewVector3(0, 1.0, 0);
+	var signal = -1.0;
 
 	if txmin > txmax {
 		var temp float64 = txmin;
 		txmin = txmax;
 		txmax = temp;
+		signal = 1.0;
 	}
 
 	if (tmin > txmax) || (txmin > tmax) {
@@ -41,6 +44,7 @@ func (box *Box) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *HitRe
 	}
 
 	if txmin > tmin {
+		normal.Set(signal, 0.0, 0.0);
 		tmin = txmin;
 	}
 	if txmax < tmax {
@@ -49,11 +53,13 @@ func (box *Box) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *HitRe
 
 	var tymin float64 = (box.Min.Y - ray.Origin.Y) / ray.Direction.Y;
 	var tymax float64 = (box.Max.Y - ray.Origin.Y) / ray.Direction.Y;
+	signal = -1.0;
 
 	if tymin > tymax {
 		var temp float64 = tymin;
 		tymin = tymax;
 		tymax = temp;
+		signal = 1.0;
 	}
 
 	if (tmin > tymax) || (tymin > tmax) {
@@ -61,6 +67,7 @@ func (box *Box) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *HitRe
 	}
 
 	if tymin > tmin {
+		normal.Set(0.0, signal, 0.0);
 		tmin = tymin;
 	}
 	if tymax < tmax {
@@ -69,11 +76,13 @@ func (box *Box) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *HitRe
 
 	var tzmin float64 = (box.Min.Z - ray.Origin.Z) / ray.Direction.Z;
 	var tzmax float64 = (box.Max.Z - ray.Origin.Z) / ray.Direction.Z;
+	signal = -1.0;
 
 	if tzmin > tzmax {
 		var temp float64 = tzmin;
 		tzmin = tzmax;
 		tzmax = temp;
+		signal = 1.0;
 	}
 
 	if (tmin > tzmax) || (tzmin > tmax) {
@@ -81,10 +90,17 @@ func (box *Box) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *HitRe
 	}
 
 	if tzmin > tmin {
+		normal.Set(0.0, 0.0, signal);
 		tmin = tzmin;
 	}
 	if tzmax < tmax {
 		tmax = tzmax;
+	}
+
+	if tmin > tmax {
+		var temp float64 = tmin;
+		tmin = tmax;
+		tmax = temp;
 	}
 
 	hitRecord.Material = box.Material;
