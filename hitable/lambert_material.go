@@ -4,7 +4,7 @@ import (
 	"gotracer/vmath"
 );
 
-// LambertMaterial materials are diffuse objects that don’t emit light merely take on the color of their surroundings.
+// EmissiveMaterial materials are diffuse objects that don’t emit light merely take on the color of their surroundings.
 // But they  modulate that with their own intrinsic color. Light that reflects off a diffuse surface has its direction randomized.
 // They also might be absorbed rather than reflected. The darker the surface, the more likely  absorption is.
 type LambertMaterial struct {
@@ -14,7 +14,7 @@ type LambertMaterial struct {
 
 func NewLambertMaterial(albedo *vmath.Vector3) *LambertMaterial {
 	var m = new(LambertMaterial);
-	m.Albedo = albedo
+	m.Albedo = albedo;
 	return m;
 }
 

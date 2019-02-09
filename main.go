@@ -61,7 +61,8 @@ func run() {
 
 		var radius float64 = 0.4 + rand.Float64() * 0.2;
 		var position *vmath.Vector3 = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min);
-		scene.Add(hitable.NewSphere(radius, position, hitable.NewLambertMaterial(vmath.NewRandomVector3(0.1, 1))));
+		//scene.Add(hitable.NewSphere(radius, position, hitable.NewLambertMaterial(vmath.NewRandomVector3(0.1, 1))));
+		scene.Add(hitable.NewSphere(radius, position, hitable.NewEmissiveMaterial(vmath.NewRandomVector3(0.1, 1), 3.0)));
 
 		radius = 0.4 + rand.Float64() * 0.2;
 		position = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min);
