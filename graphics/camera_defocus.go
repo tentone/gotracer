@@ -53,7 +53,7 @@ func NewCameraDefocusBounds(bounds pixel.Rect) *CameraDefocus {
 	c.Position = vmath.NewVector3(-3.0, 3.0, 3.0)
 	c.LookAt = vmath.NewVector3(0.0, 0.0, 0.0)
 	c.Up = vmath.NewVector3(0.0, 1.0, 0.0)
-	c.Aperture = 0.3
+	c.Aperture = 0.0
 
 	var direction = c.Position.Clone()
 	direction.Sub(c.LookAt)

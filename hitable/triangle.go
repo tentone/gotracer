@@ -48,64 +48,38 @@ func (triangle *Triangle) GetNormal() {
 	triangle.Normal = vmath.NewEmptyVector3()
 }
 
+// https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
 func (triangle *Triangle) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *HitRecord) bool {
+	var v0v1 *vmath.Vector3 = triangle.B.Clone()
+	v0v1.Sub(triangle.A)
 
-	// Check if ray and plane are parallel
-	var NdotRayDirection float64 = vmath.Dot(triangle.Normal, ray.Direction)
-	if math.Abs(NdotRayDirection) < 0.001 {
+	var v0v2 *vmath.Vector3 = triangle.C.Clone()
+	v0v2.Sub(triangle.A)
+
+	var pvec *vmath.Vector3 = vmath.Cross(ray.Direction, v0v2)
+	var det = vmath.Dot(v0v1, pvec)
+	if det < 0.000001 {
 		return false
 	}
 
-	// Compute d parameter
-	var d float64 = vmath.Dot(triangle.Normal, triangle.A)
+	var invDet = 1.0 / det
+	var tvec *vmath.Vector3 = ray.Origin.Clone()
+	tvec.Sub(triangle.A)
 
-	// Compute t (distance))
-	var t float64 = (vmath.Dot(triangle.Normal, ray.Origin) + d) / NdotRayDirection
-
-	// Check if the triangle is in behind the ray
-	if t < 0 {
+	var u = vmath.Dot(tvec, pvec) * invDet
+	if u < 0 || u > 1 {
 		return false
 	}
 
-	// Compute the intersection point using equation 1
-	var P *vmath.Vector3 = ray.Direction.Clone()
-	P.MulScalar(t)
-	P.Add(ray.Origin)
-
-	// Edge 0
-	var edge0 *vmath.Vector3 = triangle.B.Clone()
-	edge0.Sub(triangle.A)
-	var vp0 *vmath.Vector3 = P.Clone()
-	vp0.Sub(triangle.A)
-
-	// Vector perpendicular to triangle's plane
-	var C *vmath.Vector3 = vmath.Cross(edge0, vp0)
-	if vmath.Dot(triangle.Normal, C) < 0 {
+	var qvec *vmath.Vector3 = vmath.Cross(tvec, v0v1)
+	var v = vmath.Dot(ray.Direction, qvec) * invDet
+	if v < 0 || u+v > 1 {
 		return false
 	}
 
-	// Edge 1
-	var edge1 *vmath.Vector3 = triangle.C.Clone()
-	edge1.Sub(triangle.B)
-	var vp1 *vmath.Vector3 = P.Clone()
-	vp1.Sub(triangle.B)
-	C = vmath.Cross(edge1, vp1)
-	if vmath.Dot(triangle.Normal, C) < 0 {
-		return false
-	}
-
-	// Edge 2
-	var edge2 *vmath.Vector3 = triangle.A.Clone()
-	edge2.Sub(triangle.C)
-	var vp2 *vmath.Vector3 = P.Clone()
-	vp2.Sub(triangle.C)
-	C = vmath.Cross(edge2, vp2)
-	if vmath.Dot(triangle.Normal, C) < 0 {
-		return false
-	}
-
+	var t = vmath.Dot(v0v2, qvec) * invDet
 	hitRecord.T = t
-	hitRecord.P = P //ray.PointAtParameter(temp)
+	hitRecord.P = ray.PointAtParameter(t)
 	hitRecord.Normal = triangle.Normal.Clone()
 	hitRecord.Material = triangle.Material
 	return true

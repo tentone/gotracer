@@ -11,11 +11,15 @@ import (
 	"math"
 	"math/rand"
 	"os"
-	"runtime"
 	"strconv"
 	"sync"
 	"time"
 )
+
+// Render size
+const Width float64 = 320.0
+const Height float64 = 240.0
+const Upscale float64 = 2.0
 
 // Max raytracing recursive depth
 const MaxDepth int64 = 50
@@ -40,17 +44,13 @@ var SceneCopies []*hitable.HitableList
 var CameraCopies []*graphics.CameraDefocus
 
 func main() {
-	runtime.GOMAXPROCS(8)
+	//runtime.GOMAXPROCS(8)
 	pixelgl.Run(run)
 }
 
 func run() {
-	var width = 640.0
-	var height = 480.0
-	var upscale = 1.0
-
-	var bounds = pixel.R(0, 0, width, height)
-	var windowBounds = pixel.R(0, 0, width * upscale, height * upscale)
+	var bounds = pixel.R(0, 0, Width, Height)
+	var windowBounds = pixel.R(0, 0, Width*Upscale, Height*Upscale)
 
 	// Prepare the scene
 	var scene = hitable.NewHitableList()
@@ -63,7 +63,7 @@ func run() {
 	var distance = 30.0
 
 	// Place random sphere objects
-	for i := 0; i < 40; i++ {
+	for i := 0; i < 0; i++ {
 		var radius = 0.4 + rand.Float64() * 0.2
 		var position = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min)
 		scene.Add(hitable.NewSphere(radius, position, hitable.NewLambertMaterial(vmath.NewRandomVector3(0.1, 1))))
@@ -75,6 +75,21 @@ func run() {
 		radius = 0.4 + rand.Float64() * 0.2
 		position = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min)
 		scene.Add(hitable.NewSphere(radius, position, hitable.NewDieletricMaterial(2.0 * rand.Float64(), vmath.NewRandomVector3(0.95, 1.0))))
+	}
+
+	// Random triangles
+	for i := 0; i < 10; i++ {
+		var size float64 = 1.0
+		var position = vmath.NewVector3(rand.Float64() * distance - min, size / 2.0  - 0.5, rand.Float64() * distance - min)
+
+		var a = position.Clone()
+		a.Add(vmath.NewVector3(0.0, size, 0.0))
+		var b = position.Clone()
+		b.Add(vmath.NewVector3(-size / 1.5, 0, 0.0))
+		var c = position.Clone()
+		c.Add(vmath.NewVector3(size / 1.5, 0, 0.0))
+
+		scene.Add(hitable.NewTriangle(a, b, c, hitable.NewLambertMaterial(vmath.NewRandomVector3(0.1, 1))))
 	}
 
 	var halfSize = vmath.NewVector3(0.5, 0.5, 0.5)
@@ -157,7 +172,7 @@ func run() {
 		} else {
 			sprite = pixel.NewSprite(picture, picture.Bounds())
 		}
-		sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()).Scaled(window.Bounds().Center(), upscale))
+		sprite.Draw(window, pixel.IM.Moved(window.Bounds().Center()).Scaled(window.Bounds().Center(), Upscale))
 
 		delta = time.Since(start)
 		log.Printf("Frame time %s", delta)
@@ -355,6 +370,13 @@ func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
 	return a
 }
 
+// Load obj file triangle into the scene.
+//go:norace
+func LoadOBJ(picture *hitable.HitableList, fname string) {
+
+}
+
+
 // Write the frame to a PPM file string.
 //go:norace
 func WritePPM(picture *pixel.PictureData, fname string) {
@@ -363,7 +385,7 @@ func WritePPM(picture *pixel.PictureData, fname string) {
 	var nx = int(size.X)
 	var ny = int(size.Y)
 
-	var file, err = os.Create("sky.ppm")
+	var file, err = os.Create(fname)
 	CheckError(err)
 
 	_, _ = file.WriteString("P3\n" + strconv.Itoa(nx) + " " + strconv.Itoa(ny) + "\n255\n")

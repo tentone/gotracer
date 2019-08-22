@@ -51,13 +51,13 @@
 
 
 ## Features
- - Geometries (Sphere, Box).
+ - Geometries (Sphere, Box, Triangles).
  - Materials (Dieletrics, Lambert, Metal, Normal).
  - Camera defocus.
  - Filtering
     - Antialiased image from ray jittering.
     - Temporal accomulation from single ray raytraced images.
-
+ - File loaders (.obj)
 
 
 
