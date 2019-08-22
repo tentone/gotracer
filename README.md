@@ -1,4 +1,4 @@
-# Gotracer
+# GoTracer
  - Software Raytracer written in golang.
  - Images can be previewed directly on the window as they are rendered.
  - Interaction can be done using keys from the keyboard, to control the camera.

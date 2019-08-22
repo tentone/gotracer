@@ -24,13 +24,13 @@ const MaxDepth int64 = 50
 const Antialiasing = false
 
 //If true the last n Frames are blended
-const TemporalFilter = true
+const TemporalFilter = false
 const TemporalFilterSamples = 64
 
 //If true splits the image generation into threads
 const Multithreaded = true
 const MultithreadedTheads = 4
-const MultithreadDataCopies = true
+const MultithreadDataCopies = false
 
 // Temporal acomulation buffers
 var Frames []*pixel.PictureData
