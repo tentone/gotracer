@@ -11,6 +11,7 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -25,23 +26,27 @@ const Antialiasing = false
 //If true the last n Frames are blended
 const TemporalFilter = true
 const TemporalFilterSamples = 64
-var Frames []*pixel.PictureData
 
 //If true splits the image generation into threads
 const Multithreaded = true
 const MultithreadedTheads = 4
-const MultithreadDataCopies = false
+const MultithreadDataCopies = true
+
+// Temporal acomulation buffers
+var Frames []*pixel.PictureData
+
+// Scene and camera copies for threads
 var SceneCopies []*hitable.HitableList
 var CameraCopies []*graphics.CameraDefocus
 
 func main() {
-	//runtime.GOMAXPROCS(8)
+	runtime.GOMAXPROCS(8)
 	pixelgl.Run(run)
 }
 
 func run() {
-	var width = 320.0
-	var height = 240.0
+	var width = 640.0
+	var height = 480.0
 	var upscale = 1.0
 
 	var bounds = pixel.R(0, 0, width, height)
