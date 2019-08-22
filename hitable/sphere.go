@@ -1,76 +1,76 @@
-package hitable;
+package hitable
 
-import "gotracer/vmath";
+import "gotracer/vmath"
 import "math"
 
 // Sphere is hitable object represented by a center point and a radius.
 // The sphere object has a material attached to it.
 type Sphere struct {
 	// Radius of the sphere
-	Radius float64;
+	Radius float64
 
 	// Center position of the sphere
-	Center *vmath.Vector3;
+	Center *vmath.Vector3
 
 	// Material used to render the sphere.
-	Material Material;
+	Material Material
 }
 
 func NewSphere(radius float64, center *vmath.Vector3, material Material) *Sphere {
-	var s = new(Sphere);
-	s.Radius = radius;
-	s.Center = center;
-	s.Material = material;
-	return s;
+	var s = new(Sphere)
+	s.Radius = radius
+	s.Center = center
+	s.Material = material
+	return s
 }
 
 func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *HitRecord) bool {
 
-	var oc = ray.Origin.Clone();
-	oc.Sub(s.Center);
+	var oc = ray.Origin.Clone()
+	oc.Sub(s.Center)
 
-	var a = vmath.Dot(ray.Direction, ray.Direction);
-	var b = vmath.Dot(oc, ray.Direction);
-	var c = vmath.Dot(oc, oc) - s.Radius * s.Radius;
-	var discriminant = b * b - a * c;
+	var a = vmath.Dot(ray.Direction, ray.Direction)
+	var b = vmath.Dot(oc, ray.Direction)
+	var c = vmath.Dot(oc, oc) - s.Radius * s.Radius
+	var discriminant = b * b - a * c
 
 	if discriminant > 0 {
 
 		//First root result
-		var temp float64 = (-b - math.Sqrt(discriminant)) / a;
+		var temp = (-b - math.Sqrt(discriminant)) / a
 
 		if temp < tmax && temp > tmin {
-			hitRecord.T = temp;
-			hitRecord.P = ray.PointAtParameter(temp);
-			hitRecord.Normal = hitRecord.P.Clone();
-			hitRecord.Normal.Sub(s.Center);
-			hitRecord.Normal.DivideScalar(s.Radius);
-			hitRecord.Material = s.Material;
-			return true;
+			hitRecord.T = temp
+			hitRecord.P = ray.PointAtParameter(temp)
+			hitRecord.Normal = hitRecord.P.Clone()
+			hitRecord.Normal.Sub(s.Center)
+			hitRecord.Normal.DivideScalar(s.Radius)
+			hitRecord.Material = s.Material
+			return true
 		}
 
 		//Second root result
-		temp = (-b + math.Sqrt(discriminant)) / a;
-		
+		temp = (-b + math.Sqrt(discriminant)) / a
+
 		if temp < tmax && temp > tmin {
-			hitRecord.T = temp;
-			hitRecord.P = ray.PointAtParameter(temp);
-			hitRecord.Normal = hitRecord.P.Clone();
-			hitRecord.Normal.Sub(s.Center);
-			hitRecord.Normal.DivideScalar(s.Radius);
-			hitRecord.Material = s.Material;
-			return true;
+			hitRecord.T = temp
+			hitRecord.P = ray.PointAtParameter(temp)
+			hitRecord.Normal = hitRecord.P.Clone()
+			hitRecord.Normal.Sub(s.Center)
+			hitRecord.Normal.DivideScalar(s.Radius)
+			hitRecord.Material = s.Material
+			return true
 		}
 		
 	}
 
-	return false;
+	return false
 }
 
 func (o *Sphere) Clone() Hitable {
-	var s = new(Sphere);
-	s.Radius = o.Radius;
-	s.Center = o.Center.Clone();
-	s.Material = o.Material.Clone();
-	return s;
+	var s = new(Sphere)
+	s.Radius = o.Radius
+	s.Center = o.Center.Clone()
+	s.Material = o.Material.Clone()
+	return s
 }

@@ -1,6 +1,6 @@
-package hitable;
+package hitable
 
-import "gotracer/vmath";
+import "gotracer/vmath"
 
 // Hitable interface indicates a object that can be raytraced.
 type Hitable interface {

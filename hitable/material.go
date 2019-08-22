@@ -1,6 +1,6 @@
-package hitable;
+package hitable
 
-import "gotracer/vmath";
+import "gotracer/vmath"
 
 // Material class can be used to calculate how the light rays are affected by the hitable objects surface.
 // Should be used to implement multiple types of materials.
