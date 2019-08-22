@@ -24,8 +24,8 @@ const MaxDepth int64 = 50
 const Antialiasing = false
 
 //If true the last n Frames are blended
-const TemporalFilter = false
-const TemporalFilterSamples = 64
+const TemporalFilter = true
+const TemporalFilterSamples = 16
 
 //If true splits the image generation into threads
 const Multithreaded = true
@@ -80,7 +80,7 @@ func run() {
 	var halfSize = vmath.NewVector3(0.5, 0.5, 0.5)
 
 	//Place random box objects
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 0; i++ {
 		var position = vmath.NewVector3(rand.Float64() * distance - min, halfSize.Y - 0.5, rand.Float64()*distance-min)
 		var bmin = position.Clone()
 		bmin.Sub(halfSize)

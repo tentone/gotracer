@@ -28,13 +28,13 @@ func NewTriangle(a *vmath.Vector3, b *vmath.Vector3, c *vmath.Vector3, material 
 	return t
 }
 
-func (t *Triangle) GetNormal() {
+func (triangle *Triangle) GetNormal() {
 
-	var c = t.C.Clone()
-	c.Sub(t.B)
+	var c = triangle.C.Clone()
+	c.Sub(triangle.B)
 
-	var a = t.A.Clone()
-	a.Sub(t.B)
+	var a = triangle.A.Clone()
+	a.Sub(triangle.B)
 
 	var cross = vmath.Cross(c, a)
 
@@ -42,15 +42,13 @@ func (t *Triangle) GetNormal() {
 
 	if targetLengthSq > 0 {
 		cross.MulScalar(1 / math.Sqrt(targetLengthSq))
-		t.Normal = cross.Clone()
+		triangle.Normal = cross.Clone()
 	}
 
-	t.Normal = vmath.NewEmptyVector3()
+	triangle.Normal = vmath.NewEmptyVector3()
 }
 
 func (triangle *Triangle) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *HitRecord) bool {
-	// No need to normalize
-	var area2 float64 = triangle.Normal.Length()
 
 	// Check if ray and plane are parallel
 	var NdotRayDirection float64 = vmath.Dot(triangle.Normal, ray.Direction)
@@ -61,54 +59,64 @@ func (triangle *Triangle) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRec
 	// Compute d parameter
 	var d float64 = vmath.Dot(triangle.Normal, triangle.A)
 
-	// Compute t (equation 3)
+	// Compute t (distance))
 	var t float64 = (vmath.Dot(triangle.Normal, ray.Origin) + d) / NdotRayDirection
-	// check if the triangle is in behind the ray
+
+	// Check if the triangle is in behind the ray
 	if t < 0 {
 		return false
 	}
 
-	// compute the intersection point using equation 1
-	var P vmath.Vector3 = ray.Origin + t * ray.Direction
+	// Compute the intersection point using equation 1
+	var P *vmath.Vector3 = ray.Direction.Clone()
+	P.MulScalar(t)
+	P.Add(ray.Origin)
 
 	// Edge 0
-	var edge0 vmath.Vector3 = triangle.B - triangle.A
-	var vp0 vmath.Vector3 = P - triangle.A
+	var edge0 *vmath.Vector3 = triangle.B.Clone()
+	edge0.Sub(triangle.A)
+	var vp0 *vmath.Vector3 = P.Clone()
+	vp0.Sub(triangle.A)
 
 	// Vector perpendicular to triangle's plane
-	var C vmath.Vector3 = vmath.Cross(edge0, vp0)
+	var C *vmath.Vector3 = vmath.Cross(edge0, vp0)
 	if vmath.Dot(triangle.Normal, C) < 0 {
 		return false
 	}
 
 	// Edge 1
-	var edge1 vmath.Vector3 = triangle.C - triangle.B
-	var vp1 vmath.Vector3 = P - triangle.B
+	var edge1 *vmath.Vector3 = triangle.C.Clone()
+	edge1.Sub(triangle.B)
+	var vp1 *vmath.Vector3 = P.Clone()
+	vp1.Sub(triangle.B)
 	C = vmath.Cross(edge1, vp1)
 	if vmath.Dot(triangle.Normal, C) < 0 {
 		return false
 	}
 
 	// Edge 2
-	var edge2 vmath.Vector3 = triangle.A - triangle.C
-	var vp2 vmath.Vector3 = P - triangle.C
+	var edge2 *vmath.Vector3 = triangle.A.Clone()
+	edge2.Sub(triangle.C)
+	var vp2 *vmath.Vector3 = P.Clone()
+	vp2.Sub(triangle.C)
 	C = vmath.Cross(edge2, vp2)
 	if vmath.Dot(triangle.Normal, C) < 0 {
 		return false
 	}
 
-	hitRecord.T = temp
-	hitRecord.P = ray.PointAtParameter(temp)
+	hitRecord.T = t
+	hitRecord.P = P //ray.PointAtParameter(temp)
 	hitRecord.Normal = triangle.Normal.Clone()
 	hitRecord.Material = triangle.Material
 	return true
 }
 
-func (o *Triangle) Clone() Hitable {
+func (triangle *Triangle) Clone() Hitable {
 	var s = new(Triangle)
-	s.A = o.A.Clone()
-	s.B = o.B.Clone()
-	s.C = o.C.Clone()
-	s.Material = o.Material.Clone()
+	s.A = triangle.A.Clone()
+	s.B = triangle.B.Clone()
+	s.C = triangle.C.Clone()
+	s.Normal = triangle.Normal.Clone()
+	s.Material = triangle.Material.Clone()
 	return s
 }
