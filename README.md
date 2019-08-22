@@ -11,16 +11,20 @@
  - Data had to be reordered for go to actually scale properly with multiple threads.
  - Calling multiple goroutines that use that same data cause them to lock on each other to access data and the performance gains are minimal.
  - Tests were performed with 154 objects in the render scene.
- - Here are the base performance number for a single thread on my i5 6500 with DDR3 memory.
-    - 320x240 averaged 430ms per frame
-    - 640x480 averaged 1750ms per frame
- - Just by splitting the work by multiple goroutines (4 threads)
-    - 320x240 averaged 220ms per frame (1.95x faster)
-    - 640x480 averaged 650ms per frame (2.69x faster)
- - Just by making explicit object copies for each thread (4 threads)
-    - 320x240 averaged 120ms per frame (3.58x faster)
-    - 640x480 averaged 620ms per frame (3.64x faster)
-    
+ - Test platform was a Core i7 3537u running Go 1.12.8 w/ 4 threads
+ - Base performance number for a single thread.
+    - 320x240 ~590ms per frame
+    - 640x480 ~2250ms per frame
+ - Splitting the work by multiple goroutines
+    - 320x240 ~ms per frame (x faster)
+    - 640x480 ~ms per frame (x faster)
+ - Explicit object copies for each thread (4 threads)
+    - 320x240 ~300ms per frame (x faster)
+    - 640x480 ~ms per frame (x faster)
+ - Using the //go:norace code annotation to skip the data race condition analysis.
+    - 320x240 ~285ms per frame (x faster)
+    - 640x480 ~ms per frame (x faster)
+
 ## Features
  - Geometries (Sphere, Box).
  - Materials (Dieletrics, Lambert, Metal, Normal).

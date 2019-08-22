@@ -17,24 +17,25 @@ import (
 )
 
 // Max raytracing recursive depth
-var MaxDepth int64 = 50
+const MaxDepth int64 = 50
 
 //If true multiple rays are casted and blended for each pixel
-var Antialiasing = false
+const Antialiasing = false
 
 //If true the last n Frames are blended
-var TemporalFilter = true
-var TemporalFilterSamples = 64
+const TemporalFilter = true
+const TemporalFilterSamples = 64
 var Frames []*pixel.PictureData
 
 //If true splits the image generation into threads
-var Multithreaded = true
-var MultithreadedTheads = 4
+const Multithreaded = true
+const MultithreadedTheads = 4
+const MultithreadDataCopies = false
 var SceneCopies []*hitable.HitableList
 var CameraCopies []*graphics.CameraDefocus
 
 func main() {
-	//runtime.GOMAXPROCS(8);
+	//runtime.GOMAXPROCS(8)
 	pixelgl.Run(run)
 }
 
@@ -92,7 +93,7 @@ func run() {
 
 	var camera = graphics.NewCameraDefocusBounds(bounds)
 
-	if Multithreaded {
+	if Multithreaded && MultithreadDataCopies {
 		for i := 0; i < MultithreadedTheads; i++ {
 			SceneCopies = append(SceneCopies, scene.Clone())
 			CameraCopies = append(CameraCopies, camera.Clone())
@@ -203,7 +204,7 @@ func UpdateCamera(camera *graphics.CameraDefocus){
 		Frames = nil
 	}
 
-	if Multithreaded {
+	if Multithreaded && MultithreadDataCopies{
 		for i := 0; i < MultithreadedTheads; i++ {
 			CameraCopies[i].Copy(camera)
 			CameraCopies[i].UpdateViewport()
@@ -211,11 +212,10 @@ func UpdateCamera(camera *graphics.CameraDefocus){
 	} else {
 		camera.UpdateViewport()
 	}
-
-
 }
 
 //Render image the image
+//go:norace
 func Render(bounds pixel.Rect, scene *hitable.HitableList, camera *graphics.CameraDefocus) *pixel.PictureData {
 	var size = bounds.Size()
 	var picture *pixel.PictureData = pixel.MakePictureData(bounds)
@@ -227,9 +227,17 @@ func Render(bounds pixel.Rect, scene *hitable.HitableList, camera *graphics.Came
 		wg.Add(MultithreadedTheads)
 		var wtx = nx / MultithreadedTheads
 		var itx = 0
-		for i := 0; i < MultithreadedTheads; i++ {
-			go RaytraceThread(&wg, picture, SceneCopies[i], CameraCopies[i], MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, itx, 0, itx + wtx, ny)
-			itx += wtx
+
+		if MultithreadDataCopies {
+			for i := 0; i < MultithreadedTheads; i++ {
+				go RaytraceThread(&wg, picture, SceneCopies[i], CameraCopies[i], MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, itx, 0, itx + wtx, ny)
+				itx += wtx
+			}
+		} else {
+			for i := 0; i < MultithreadedTheads; i++ {
+				go RaytraceThread(&wg, picture, scene, camera, MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, itx, 0, itx + wtx, ny)
+				itx += wtx
+			}
 		}
 
 		wg.Wait()
@@ -244,6 +252,7 @@ func Render(bounds pixel.Rect, scene *hitable.HitableList, camera *graphics.Came
 // Raytrace the picure in a thread and write it to the output object.
 // The result is writen to the picture object passed as argument.
 // This method is intended to be called multiple threads.
+//go:norace
 func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *hitable.HitableList, camera *graphics.CameraDefocus, depth int64, jitter bool, antialiasing bool, width float64, height float64, ix int, iy int, nx int, ny int) {
 	for j := iy; j < ny; j++ {
 		for i := ix; i < nx; i++ {
@@ -295,7 +304,8 @@ func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *hitab
 
 // Render the scene to calculate the color for a ray.
 // Receives the scene and the initial ray to be casted.
-// It is called recursively until the ray does not hit anything, it is absorved of depth reaches 0.
+// It is called recursively until the ray does not hit anything, it is absorbed of depth reaches 0.
+//go:norace
 func RaytraceScene(scene *hitable.HitableList, ray *vmath.Ray, depth int64) *vmath.Vector3 {
 	var hitRecord = hitable.NewHitRecord()
 
@@ -324,6 +334,7 @@ func RaytraceScene(scene *hitable.HitableList, ray *vmath.Ray, depth int64) *vma
 
 // Calculate the background color from ray.
 // This method is used for multi threading.
+//go:norace
 func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
 	var unitDirection = r.Direction.UnitVector()
 	var t = 0.5 * (unitDirection.Y + 1.0)
@@ -339,7 +350,8 @@ func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
 	return a
 }
 
-// Write the frame to a PPM file string
+// Write the frame to a PPM file string.
+//go:norace
 func WritePPM(picture *pixel.PictureData, fname string) {
 	var size = picture.Rect.Size()
 
@@ -349,22 +361,23 @@ func WritePPM(picture *pixel.PictureData, fname string) {
 	var file, err = os.Create("sky.ppm")
 	CheckError(err)
 
-	file.WriteString("P3\n" + strconv.Itoa(nx) + " " + strconv.Itoa(ny) + "\n255\n")
+	_, _ = file.WriteString("P3\n" + strconv.Itoa(nx) + " " + strconv.Itoa(ny) + "\n255\n")
 
 	for j := 0; j < ny; j++ {
 		for i := 0; i < nx; i++ {
 			//Write to file
 			var index = picture.Index(pixel.Vec{X:float64(i), Y:float64(j)})
-			file.WriteString(strconv.Itoa(int(picture.Pix[index].R)) + " " + strconv.Itoa(int(picture.Pix[index].G)) + " " + strconv.Itoa(int(picture.Pix[index].B)) + "\n")
+			_, _ = file.WriteString(strconv.Itoa(int(picture.Pix[index].R)) + " " + strconv.Itoa(int(picture.Pix[index].G)) + " " + strconv.Itoa(int(picture.Pix[index].B)) + "\n")
 		}
 	}
 
 	//Close file
-	file.Sync()
-	file.Close()
+	_ = file.Sync()
+	_ = file.Close()
 }
 
-//CheckError an error	
+//CheckError an error.
+//go:norace
 func CheckError(e error) {
 	if e != nil {
 		panic(e)
