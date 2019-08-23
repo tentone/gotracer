@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
+	"github.com/sheenobu/go-obj/obj"
 	"golang.org/x/image/colornames"
 	"gotracer/graphics"
 	"gotracer/hitable"
 	"gotracer/vmath"
+	"io/ioutil"
 	"log"
 	"math"
 	"math/rand"
@@ -19,7 +22,7 @@ import (
 // Render size
 const Width float64 = 320.0
 const Height float64 = 240.0
-const Upscale float64 = 2.0
+const Upscale float64 = 1.0
 
 // Max raytracing recursive depth
 const MaxDepth int64 = 50
@@ -29,7 +32,7 @@ const Antialiasing = false
 
 //If true the last n Frames are blended
 const TemporalFilter = true
-const TemporalFilterSamples = 16
+const TemporalFilterSamples = 32
 
 //If true splits the image generation into threads
 const Multithreaded = true
@@ -55,12 +58,14 @@ func run() {
 	// Prepare the scene
 	var scene = hitable.NewHitableList()
 	scene.Add(hitable.NewSphere(500.0, vmath.NewVector3(0.0, -500.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.4, 0.7, 0.0))))
-	scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -3.0), hitable.NewNormalMaterial()))
-	scene.Add(hitable.NewSphere(1.5, vmath.NewVector3(5.0, 1.0, -6.0), hitable.NewDieletricMaterial(1.3, vmath.NewVector3(0.90, 0.90, 0.90))))
-	scene.Add(hitable.NewSphere(1.5, vmath.NewVector3(-1.0, 1.0, -3.0), hitable.NewMetalMaterial(vmath.NewVector3(0.6, 0.6, 0.6), 0.1)))
+	//scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -3.0), hitable.NewNormalMaterial()))
+	//scene.Add(hitable.NewSphere(1.5, vmath.NewVector3(5.0, 1.0, -6.0), hitable.NewDieletricMaterial(1.3, vmath.NewVector3(0.90, 0.90, 0.90))))
+	//scene.Add(hitable.NewSphere(1.5, vmath.NewVector3(-1.0, 1.0, -3.0), hitable.NewMetalMaterial(vmath.NewVector3(0.6, 0.6, 0.6), 0.1)))
 
 	var min = 15.0
 	var distance = 30.0
+
+	LoadOBJ(scene, "bunny.obj", hitable.NewLambertMaterial(vmath.NewVector3(0.1, 0.3, 0.7)))
 
 	// Place random sphere objects
 	for i := 0; i < 0; i++ {
@@ -78,7 +83,7 @@ func run() {
 	}
 
 	// Random triangles
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 0; i++ {
 		var size float64 = 1.0
 		var position = vmath.NewVector3(rand.Float64() * distance - min, size / 2.0  - 0.5, rand.Float64() * distance - min)
 
@@ -372,10 +377,22 @@ func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
 
 // Load obj file triangle into the scene.
 //go:norace
-func LoadOBJ(picture *hitable.HitableList, fname string) {
+func LoadOBJ(scene *hitable.HitableList, fname string, material hitable.Material) {
+	var file, _ = os.Open(fname)
 
+	var data, _ = ioutil.ReadAll(file)
+
+	var reader = obj.NewReader(bytes.NewBuffer(data))
+	var object, _ = reader.Read()
+
+	for i := 0; i < len(object.Faces); i++ {
+		var points = object.Faces[i].Points
+		var a = vmath.NewVector3(points[0].Vertex.X, points[0].Vertex.Y, points[0].Vertex.Z)
+		var b = vmath.NewVector3(points[1].Vertex.X, points[1].Vertex.Y, points[1].Vertex.Z)
+		var c = vmath.NewVector3(points[2].Vertex.X, points[2].Vertex.Y, points[2].Vertex.Z)
+		scene.Add(hitable.NewTriangle(a, b, c, material))
+	}
 }
-
 
 // Write the frame to a PPM file string.
 //go:norace

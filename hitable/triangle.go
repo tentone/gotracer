@@ -37,15 +37,11 @@ func (triangle *Triangle) GetNormal() {
 	a.Sub(triangle.B)
 
 	var cross = vmath.Cross(c, a)
-
 	var targetLengthSq = cross.SquaredLength()
-
 	if targetLengthSq > 0 {
 		cross.MulScalar(1 / math.Sqrt(targetLengthSq))
 		triangle.Normal = cross.Clone()
 	}
-
-	triangle.Normal = vmath.NewEmptyVector3()
 }
 
 // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
