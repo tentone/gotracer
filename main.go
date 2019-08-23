@@ -6,8 +6,9 @@ import (
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/sheenobu/go-obj/obj"
 	"golang.org/x/image/colornames"
-	"gotracer/graphics"
-	"gotracer/hitable"
+	"gotracer/geometry"
+	"gotracer/camera"
+	"gotracer/material"
 	"gotracer/vmath"
 	"io/ioutil"
 	"log"
@@ -27,6 +28,9 @@ const Upscale float64 = 1.0
 // Max raytracing recursive depth
 const MaxDepth int64 = 50
 
+// Minimum distance to be considerd for ray collision
+const MinDistance float64 = 1e-5
+
 //If true multiple rays are casted and blended for each pixel
 const Antialiasing = false
 
@@ -43,8 +47,8 @@ const MultithreadDataCopies = false
 var Frames []*pixel.PictureData
 
 // Scene and camera copies for threads
-var SceneCopies []*hitable.HitableList
-var CameraCopies []*graphics.CameraDefocus
+var SceneCopies []*geometry.Scene
+var CameraCopies []*camera.CameraDefocus
 
 func main() {
 	//runtime.GOMAXPROCS(8)
@@ -53,33 +57,33 @@ func main() {
 
 func run() {
 	var bounds = pixel.R(0, 0, Width, Height)
-	var windowBounds = pixel.R(0, 0, Width*Upscale, Height*Upscale)
+	var windowBounds = pixel.R(0, 0, Width * Upscale, Height * Upscale)
 
 	// Prepare the scene
-	var scene = hitable.NewHitableList()
-	scene.Add(hitable.NewSphere(500.0, vmath.NewVector3(0.0, -500.5, -1.0), hitable.NewLambertMaterial(vmath.NewVector3(0.4, 0.7, 0.0))))
-	//scene.Add(hitable.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -3.0), hitable.NewNormalMaterial()))
-	//scene.Add(hitable.NewSphere(1.5, vmath.NewVector3(5.0, 1.0, -6.0), hitable.NewDieletricMaterial(1.3, vmath.NewVector3(0.90, 0.90, 0.90))))
-	//scene.Add(hitable.NewSphere(1.5, vmath.NewVector3(-1.0, 1.0, -3.0), hitable.NewMetalMaterial(vmath.NewVector3(0.6, 0.6, 0.6), 0.1)))
+	var scene = geometry.NewScene()
+	scene.Add(geometry.NewSphere(500.0, vmath.NewVector3(0.0, -500.5, -1.0), material.NewLightMaterial(vmath.NewVector3(0.4, 0.7, 0.0))))
+	scene.Add(geometry.NewSphere(0.5, vmath.NewVector3(-1.0, 0.0, -3.0), material.NewNormalMaterial()))
+	scene.Add(geometry.NewSphere(1.5, vmath.NewVector3(5.0, 1.0, -6.0), material.NewDieletricMaterial(1.3, vmath.NewVector3(0.90, 0.90, 0.90))))
+	scene.Add(geometry.NewSphere(1.5, vmath.NewVector3(-1.0, 1.0, -3.0), material.NewMetalMaterial(vmath.NewVector3(0.6, 0.6, 0.6), 0.1)))
 
 	var min = 15.0
 	var distance = 30.0
 
-	LoadOBJ(scene, "bunny.obj", hitable.NewLambertMaterial(vmath.NewVector3(0.1, 0.3, 0.7)))
+	LoadOBJ(scene, "bunny.obj", material.NewLightMaterial(vmath.NewVector3(0.90, 0.9, 0.9)))
 
 	// Place random sphere objects
 	for i := 0; i < 0; i++ {
 		var radius = 0.4 + rand.Float64() * 0.2
 		var position = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min)
-		scene.Add(hitable.NewSphere(radius, position, hitable.NewLambertMaterial(vmath.NewRandomVector3(0.1, 1))))
+		scene.Add(geometry.NewSphere(radius, position, material.NewLightMaterial(vmath.NewRandomVector3(0.1, 1))))
 
 		radius = 0.4 + rand.Float64() * 0.2
 		position = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min)
-		scene.Add(hitable.NewSphere(radius, position, hitable.NewMetalMaterial(vmath.NewRandomVector3(0.1, 1), rand.Float64())))
+		scene.Add(geometry.NewSphere(radius, position, material.NewMetalMaterial(vmath.NewRandomVector3(0.1, 1), rand.Float64())))
 
 		radius = 0.4 + rand.Float64() * 0.2
 		position = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min)
-		scene.Add(hitable.NewSphere(radius, position, hitable.NewDieletricMaterial(2.0 * rand.Float64(), vmath.NewRandomVector3(0.95, 1.0))))
+		scene.Add(geometry.NewSphere(radius, position, material.NewDieletricMaterial(2.0 * rand.Float64(), vmath.NewRandomVector3(0.95, 1.0))))
 	}
 
 	// Random triangles
@@ -94,7 +98,7 @@ func run() {
 		var c = position.Clone()
 		c.Add(vmath.NewVector3(size / 1.5, 0, 0.0))
 
-		scene.Add(hitable.NewTriangle(a, b, c, hitable.NewLambertMaterial(vmath.NewRandomVector3(0.1, 1))))
+		scene.Add(geometry.NewTriangle(a, b, c, material.NewLightMaterial(vmath.NewRandomVector3(0.1, 1))))
 	}
 
 	var halfSize = vmath.NewVector3(0.5, 0.5, 0.5)
@@ -106,17 +110,17 @@ func run() {
 		bmin.Sub(halfSize)
 		var bmax = position.Clone()
 		bmax.Add(halfSize)
-		scene.Add(hitable.NewBox(bmin, bmax, hitable.NewLambertMaterial(vmath.NewRandomVector3(0.1, 1))))
+		scene.Add(geometry.NewBox(bmin, bmax, material.NewLightMaterial(vmath.NewRandomVector3(0.1, 1))))
 
 		position = vmath.NewVector3(rand.Float64() * distance - min, halfSize.Y - 0.5, rand.Float64()*distance-min)
 		bmin = position.Clone()
 		bmin.Sub(halfSize)
 		bmax = position.Clone()
 		bmax.Add(halfSize)
-		scene.Add(hitable.NewBox(bmin, bmax, hitable.NewMetalMaterial(vmath.NewRandomVector3(0.6, 1), 0.0)))
+		scene.Add(geometry.NewBox(bmin, bmax, material.NewMetalMaterial(vmath.NewRandomVector3(0.6, 1), 0.0)))
 	}
 
-	var camera = graphics.NewCameraDefocusBounds(bounds)
+	var camera = camera.NewCameraDefocusBounds(bounds)
 
 	if Multithreaded && MultithreadDataCopies {
 		for i := 0; i < MultithreadedTheads; i++ {
@@ -223,7 +227,7 @@ func run() {
 }
 
 // Update the camera viewport
-func UpdateCamera(camera *graphics.CameraDefocus){
+func UpdateCamera(camera *camera.CameraDefocus){
 
 	if TemporalFilter {
 		Frames = nil
@@ -241,7 +245,7 @@ func UpdateCamera(camera *graphics.CameraDefocus){
 
 //Render image the image
 //go:norace
-func Render(bounds pixel.Rect, scene *hitable.HitableList, camera *graphics.CameraDefocus) *pixel.PictureData {
+func Render(bounds pixel.Rect, scene *geometry.Scene, camera *camera.CameraDefocus) *pixel.PictureData {
 	var size = bounds.Size()
 	var picture *pixel.PictureData = pixel.MakePictureData(bounds)
 	var nx = int(size.X)
@@ -274,11 +278,11 @@ func Render(bounds pixel.Rect, scene *hitable.HitableList, camera *graphics.Came
 	return picture
 }
 
-// Raytrace the picure in a thread and write it to the output object.
-// The result is writen to the picture object passed as argument.
+// Ray trace the picture in a thread and write it to the output object.
+// The result is written to the picture object passed as argument.
 // This method is intended to be called multiple threads.
 //go:norace
-func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *hitable.HitableList, camera *graphics.CameraDefocus, depth int64, jitter bool, antialiasing bool, width float64, height float64, ix int, iy int, nx int, ny int) {
+func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *geometry.Scene, camera *camera.CameraDefocus, depth int64, jitter bool, antialiasing bool, width float64, height float64, ix int, iy int, nx int, ny int) {
 	for j := iy; j < ny; j++ {
 		for i := ix; i < nx; i++ {
 			var color *vmath.Vector3
@@ -331,10 +335,10 @@ func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *hitab
 // Receives the scene and the initial ray to be casted.
 // It is called recursively until the ray does not hit anything, it is absorbed of depth reaches 0.
 //go:norace
-func RaytraceScene(scene *hitable.HitableList, ray *vmath.Ray, depth int64) *vmath.Vector3 {
-	var hitRecord = hitable.NewHitRecord()
+func RaytraceScene(scene *geometry.Scene, ray *vmath.Ray, depth int64) *vmath.Vector3 {
+	var hitRecord = material.NewHitRecord()
 
-	if scene.Hit(ray, 0.001, math.MaxFloat64, hitRecord) {
+	if scene.Hit(ray, MinDistance, math.MaxFloat64, hitRecord) {
 
 		var scattered = vmath.NewEmptyRay()
 		var attenuation = vmath.NewVector3(0, 0, 0)
@@ -377,7 +381,7 @@ func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
 
 // Load obj file triangle into the scene.
 //go:norace
-func LoadOBJ(scene *hitable.HitableList, fname string, material hitable.Material) {
+func LoadOBJ(scene *geometry.Scene, fname string, material material.Material) {
 	var file, _ = os.Open(fname)
 
 	var data, _ = ioutil.ReadAll(file)
@@ -390,7 +394,7 @@ func LoadOBJ(scene *hitable.HitableList, fname string, material hitable.Material
 		var a = vmath.NewVector3(points[0].Vertex.X, points[0].Vertex.Y, points[0].Vertex.Z)
 		var b = vmath.NewVector3(points[1].Vertex.X, points[1].Vertex.Y, points[1].Vertex.Z)
 		var c = vmath.NewVector3(points[2].Vertex.X, points[2].Vertex.Y, points[2].Vertex.Z)
-		scene.Add(hitable.NewTriangle(a, b, c, material))
+		scene.Add(geometry.NewTriangle(a, b, c, material))
 	}
 }
 

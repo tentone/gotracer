@@ -1,6 +1,7 @@
-package hitable
+package geometry
 
 import (
+	"gotracer/material"
 	"gotracer/vmath"
 )
 
@@ -13,10 +14,10 @@ type Box struct {
 	Max *vmath.Vector3
 
 	// Material used to render the box.
-	Material Material
+	Material material.Material
 }
 
-func NewBox(min *vmath.Vector3, max *vmath.Vector3, material Material) *Box {
+func NewBox(min *vmath.Vector3, max *vmath.Vector3, material material.Material) *Box {
 	var box = new(Box)
 	box.Min = min
 	box.Max = max
@@ -24,7 +25,7 @@ func NewBox(min *vmath.Vector3, max *vmath.Vector3, material Material) *Box {
 	return box
 }
 
-func (box *Box) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *HitRecord) bool {
+func (box *Box) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *material.HitRecord) bool {
 
 	var txmin = (box.Min.X - ray.Origin.X) / ray.Direction.X
 	var txmax = (box.Max.X - ray.Origin.X) / ray.Direction.X

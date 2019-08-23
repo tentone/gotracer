@@ -1,6 +1,9 @@
-package hitable
+package geometry
 
-import "gotracer/vmath"
+import (
+	"gotracer/material"
+	"gotracer/vmath"
+)
 import "math"
 
 // Sphere is hitable object represented by a center point and a radius.
@@ -13,10 +16,10 @@ type Sphere struct {
 	Center *vmath.Vector3
 
 	// Material used to render the sphere.
-	Material Material
+	Material material.Material
 }
 
-func NewSphere(radius float64, center *vmath.Vector3, material Material) *Sphere {
+func NewSphere(radius float64, center *vmath.Vector3, material material.Material) *Sphere {
 	var s = new(Sphere)
 	s.Radius = radius
 	s.Center = center
@@ -24,7 +27,7 @@ func NewSphere(radius float64, center *vmath.Vector3, material Material) *Sphere
 	return s
 }
 
-func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *HitRecord) bool {
+func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *material.HitRecord) bool {
 
 	var oc = ray.Origin.Clone()
 	oc.Sub(s.Center)

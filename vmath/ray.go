@@ -2,7 +2,10 @@ package vmath
 
 // Ray is represented by an origin point A and a normalized direction vector B
 type Ray struct {
+	// Origin of the ray
 	Origin *Vector3
+
+	// Normalized direction of the ray
 	Direction *Vector3
 }
 

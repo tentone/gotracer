@@ -1,6 +1,8 @@
-package hitable
+package material
 
-import "gotracer/vmath"
+import (
+	"gotracer/vmath"
+)
 
 // Metalic object type reflect the rays that hit the object surface.
 type MetalMaterial struct {

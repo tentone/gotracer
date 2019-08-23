@@ -1,6 +1,8 @@
-package hitable
+package material
 
-import "gotracer/vmath"
+import (
+	"gotracer/vmath"
+)
 
 // Material to preview/debug the normal direction of a hitable object.
 type NormalMaterial struct {}

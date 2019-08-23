@@ -1,8 +1,8 @@
-package hitable
+package geometry
 
 import (
+	"gotracer/material"
 	"gotracer/vmath"
-	"math"
 )
 
 // Triangle is hittable object represented by three points.
@@ -15,10 +15,10 @@ type Triangle struct {
 	Normal *vmath.Vector3
 
 	// Material used to render the sphere.
-	Material Material
+	Material material.Material
 }
 
-func NewTriangle(a *vmath.Vector3, b *vmath.Vector3, c *vmath.Vector3, material Material) *Triangle {
+func NewTriangle(a *vmath.Vector3, b *vmath.Vector3, c *vmath.Vector3, material material.Material) *Triangle {
 	var t = new(Triangle)
 	t.A = a
 	t.B = b
@@ -36,16 +36,19 @@ func (triangle *Triangle) GetNormal() {
 	var a = triangle.A.Clone()
 	a.Sub(triangle.B)
 
-	var cross = vmath.Cross(c, a)
-	var targetLengthSq = cross.SquaredLength()
+	triangle.Normal = vmath.Cross(c, a)
+
+	var targetLengthSq = triangle.Normal.SquaredLength()
 	if targetLengthSq > 0 {
-		cross.MulScalar(1 / math.Sqrt(targetLengthSq))
-		triangle.Normal = cross.Clone()
+		triangle.Normal.Normalize()
+		//triangle.Normal.MulScalar(1 / math.Sqrt(targetLengthSq))
+	} else {
+		triangle.Normal.Set(0.0, 0.0, 0.0)
 	}
 }
 
 // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-func (triangle *Triangle) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *HitRecord) bool {
+func (triangle *Triangle) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *material.HitRecord) bool {
 	var v0v1 *vmath.Vector3 = triangle.B.Clone()
 	v0v1.Sub(triangle.A)
 
@@ -69,16 +72,21 @@ func (triangle *Triangle) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRec
 
 	var qvec *vmath.Vector3 = vmath.Cross(tvec, v0v1)
 	var v = vmath.Dot(ray.Direction, qvec) * invDet
-	if v < 0 || u+v > 1 {
+	if v < 0 || u + v > 1 {
 		return false
 	}
 
 	var t = vmath.Dot(v0v2, qvec) * invDet
-	hitRecord.T = t
-	hitRecord.P = ray.PointAtParameter(t)
-	hitRecord.Normal = triangle.Normal.Clone()
-	hitRecord.Material = triangle.Material
-	return true
+
+	if t < tmax && t > tmin {
+		hitRecord.T = t
+		hitRecord.P = ray.PointAtParameter(t)
+		hitRecord.Normal = triangle.Normal.Clone()
+		hitRecord.Material = triangle.Material
+		return true
+	}
+
+	return false
 }
 
 func (triangle *Triangle) Clone() Hitable {

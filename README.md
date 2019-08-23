@@ -6,7 +6,7 @@
 
 
 ## Screenshots
-![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/a.png)![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/b.png)4![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/c.png)
+![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/readme/a.png)![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/readme/b.png)![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/readme/c.png)![alt tag](https://raw.githubusercontent.com/tentone/gotracer/master/readme/d.png)
 
 
 
@@ -34,7 +34,7 @@
 
  - Performed new tests on new Go 1.12.8, also tested the go:norace flag, will have to repeat on a CPU with more cores.
  - Using the //go:norace code annotation to skip the data race condition analysis.
- - Test platform was a Core i7 3537u (2 Core HT) running Go 1.12.8 w/ 4 threads.
+ - Test platform was a Core i7 3537u (2 Core HT) running Go 1.12.8 w/ 4 threads, in the CPU it was easy to double the performance without the implicit sync points being a problem.
 
 | Mode               | Resolution | Time p/ frame |
 | ------------------ | ---------- | ------------- |
@@ -46,7 +46,6 @@
 | Explicit Data Copy | 640x480    | ~1200ms       |
 | go:norace          | 320x240    | ~285ms        |
 | go:norace          | 640x480    | ~1090ms       |
-
 
 
 

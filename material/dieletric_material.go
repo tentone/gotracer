@@ -1,4 +1,4 @@
-package hitable
+package material
 
 import (
 	"gotracer/vmath"
