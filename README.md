@@ -29,8 +29,8 @@
 | GoRoutine          | 640x480    | ~650ms        | 2.69x   |
 | Explicit Data Copy | 320x240    | ~120ms        | 3.58x   |
 | Explicit Data Copy | 640x480    | ~620ms        | 3.64x   |
-| go:norace          | 320x240    | TODO          | TODO    |
-| go:norace          | 640x480    | TODO          | TODO    |
+| go:norace          | 320x240    | ~160ms        | 2.54x   |
+| go:norace          | 640x480    | ~650ms        | 2.69x   |
 
  - Performed new tests on new Go 1.12.8, also tested the go:norace flag, will have to repeat on a CPU with more cores.
  - Using the //go:norace code annotation to skip the data race condition analysis.

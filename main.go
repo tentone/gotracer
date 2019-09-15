@@ -21,8 +21,8 @@ import (
 )
 
 // Render size
-const Width float64 = 320.0
-const Height float64 = 240.0
+const Width float64 = 640.0
+const Height float64 = 480.0
 const Upscale float64 = 1.0
 
 // Max raytracing recursive depth
@@ -69,10 +69,10 @@ func run() {
 	var min = 15.0
 	var distance = 30.0
 
-	LoadOBJ(scene, "bunny.obj", material.NewLightMaterial(vmath.NewVector3(0.90, 0.9, 0.9)))
+	//LoadOBJ(scene, "bunny.obj", material.NewLightMaterial(vmath.NewVector3(0.90, 0.9, 0.9)))
 
 	// Place random sphere objects
-	for i := 0; i < 0; i++ {
+	for i := 0; i < 40; i++ {
 		var radius = 0.4 + rand.Float64() * 0.2
 		var position = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min)
 		scene.Add(geometry.NewSphere(radius, position, material.NewLightMaterial(vmath.NewRandomVector3(0.1, 1))))
@@ -104,7 +104,7 @@ func run() {
 	var halfSize = vmath.NewVector3(0.5, 0.5, 0.5)
 
 	//Place random box objects
-	for i := 0; i < 0; i++ {
+	for i := 0; i < 10; i++ {
 		var position = vmath.NewVector3(rand.Float64() * distance - min, halfSize.Y - 0.5, rand.Float64()*distance-min)
 		var bmin = position.Clone()
 		bmin.Sub(halfSize)
