@@ -2,12 +2,8 @@ package main
 
 import (
 	"bytes"
-	"github.com/faiface/pixel"
-	"github.com/faiface/pixel/pixelgl"
-	"github.com/sheenobu/go-obj/obj"
-	"golang.org/x/image/colornames"
-	"gotracer/geometry"
 	"gotracer/camera"
+	"gotracer/geometry"
 	"gotracer/material"
 	"gotracer/vmath"
 	"io/ioutil"
@@ -18,6 +14,11 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/gopxl/pixel/pixelgl"
+	"github.com/gopxl/pixel/v2"
+	"github.com/sheenobu/go-obj/obj"
+	"golang.org/x/image/colornames"
 )
 
 // Render size
@@ -31,14 +32,14 @@ const MaxDepth int64 = 50
 // Minimum distance to be considerd for ray collision
 const MinDistance float64 = 1e-5
 
-//If true multiple rays are casted and blended for each pixel
+// If true multiple rays are casted and blended for each pixel
 const Antialiasing = false
 
-//If true the last n Frames are blended
+// If true the last n Frames are blended
 const TemporalFilter = true
 const TemporalFilterSamples = 32
 
-//If true splits the image generation into threads
+// If true splits the image generation into threads
 const Multithreaded = true
 const MultithreadedTheads = 4
 const MultithreadDataCopies = false
@@ -57,7 +58,7 @@ func main() {
 
 func run() {
 	var bounds = pixel.R(0, 0, Width, Height)
-	var windowBounds = pixel.R(0, 0, Width * Upscale, Height * Upscale)
+	var windowBounds = pixel.R(0, 0, Width*Upscale, Height*Upscale)
 
 	// Prepare the scene
 	var scene = geometry.NewScene()
@@ -73,30 +74,30 @@ func run() {
 
 	// Place random sphere objects
 	for i := 0; i < 40; i++ {
-		var radius = 0.4 + rand.Float64() * 0.2
-		var position = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min)
+		var radius = 0.4 + rand.Float64()*0.2
+		var position = vmath.NewVector3(rand.Float64()*distance-min, radius-0.5, rand.Float64()*distance-min)
 		scene.Add(geometry.NewSphere(radius, position, material.NewLightMaterial(vmath.NewRandomVector3(0.1, 1))))
 
-		radius = 0.4 + rand.Float64() * 0.2
-		position = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min)
+		radius = 0.4 + rand.Float64()*0.2
+		position = vmath.NewVector3(rand.Float64()*distance-min, radius-0.5, rand.Float64()*distance-min)
 		scene.Add(geometry.NewSphere(radius, position, material.NewMetalMaterial(vmath.NewRandomVector3(0.1, 1), rand.Float64())))
 
-		radius = 0.4 + rand.Float64() * 0.2
-		position = vmath.NewVector3(rand.Float64() * distance - min, radius - 0.5, rand.Float64() * distance - min)
-		scene.Add(geometry.NewSphere(radius, position, material.NewDieletricMaterial(2.0 * rand.Float64(), vmath.NewRandomVector3(0.95, 1.0))))
+		radius = 0.4 + rand.Float64()*0.2
+		position = vmath.NewVector3(rand.Float64()*distance-min, radius-0.5, rand.Float64()*distance-min)
+		scene.Add(geometry.NewSphere(radius, position, material.NewDieletricMaterial(2.0*rand.Float64(), vmath.NewRandomVector3(0.95, 1.0))))
 	}
 
 	// Random triangles
 	for i := 0; i < 0; i++ {
 		var size float64 = 1.0
-		var position = vmath.NewVector3(rand.Float64() * distance - min, size / 2.0  - 0.5, rand.Float64() * distance - min)
+		var position = vmath.NewVector3(rand.Float64()*distance-min, size/2.0-0.5, rand.Float64()*distance-min)
 
 		var a = position.Clone()
 		a.Add(vmath.NewVector3(0.0, size, 0.0))
 		var b = position.Clone()
-		b.Add(vmath.NewVector3(-size / 1.5, 0, 0.0))
+		b.Add(vmath.NewVector3(-size/1.5, 0, 0.0))
 		var c = position.Clone()
-		c.Add(vmath.NewVector3(size / 1.5, 0, 0.0))
+		c.Add(vmath.NewVector3(size/1.5, 0, 0.0))
 
 		scene.Add(geometry.NewTriangle(a, b, c, material.NewLightMaterial(vmath.NewRandomVector3(0.1, 1))))
 	}
@@ -105,14 +106,14 @@ func run() {
 
 	//Place random box objects
 	for i := 0; i < 10; i++ {
-		var position = vmath.NewVector3(rand.Float64() * distance - min, halfSize.Y - 0.5, rand.Float64()*distance-min)
+		var position = vmath.NewVector3(rand.Float64()*distance-min, halfSize.Y-0.5, rand.Float64()*distance-min)
 		var bmin = position.Clone()
 		bmin.Sub(halfSize)
 		var bmax = position.Clone()
 		bmax.Add(halfSize)
 		scene.Add(geometry.NewBox(bmin, bmax, material.NewLightMaterial(vmath.NewRandomVector3(0.1, 1))))
 
-		position = vmath.NewVector3(rand.Float64() * distance - min, halfSize.Y - 0.5, rand.Float64()*distance-min)
+		position = vmath.NewVector3(rand.Float64()*distance-min, halfSize.Y-0.5, rand.Float64()*distance-min)
 		bmin = position.Clone()
 		bmin.Sub(halfSize)
 		bmax = position.Clone()
@@ -130,11 +131,11 @@ func run() {
 	}
 
 	var config = pixelgl.WindowConfig{
-		Resizable: false,
+		Resizable:   false,
 		Undecorated: false,
-		VSync: false,
-		Title: "Gotracer",
-		Bounds: windowBounds}
+		VSync:       false,
+		Title:       "Gotracer",
+		Bounds:      windowBounds}
 
 	var window, err = pixelgl.NewWindow(config)
 
@@ -143,7 +144,7 @@ func run() {
 	var delta time.Duration
 
 	for !window.Closed() {
-		
+
 		var start = time.Now()
 
 		window.Clear(colornames.Black)
@@ -227,13 +228,13 @@ func run() {
 }
 
 // Update the camera viewport
-func UpdateCamera(camera *camera.CameraDefocus){
+func UpdateCamera(camera *camera.CameraDefocus) {
 
 	if TemporalFilter {
 		Frames = nil
 	}
 
-	if Multithreaded && MultithreadDataCopies{
+	if Multithreaded && MultithreadDataCopies {
 		for i := 0; i < MultithreadedTheads; i++ {
 			CameraCopies[i].Copy(camera)
 			CameraCopies[i].UpdateViewport()
@@ -243,7 +244,8 @@ func UpdateCamera(camera *camera.CameraDefocus){
 	}
 }
 
-//Render image the image
+// Render image the image
+//
 //go:norace
 func Render(bounds pixel.Rect, scene *geometry.Scene, camera *camera.CameraDefocus) *pixel.PictureData {
 	var size = bounds.Size()
@@ -259,12 +261,12 @@ func Render(bounds pixel.Rect, scene *geometry.Scene, camera *camera.CameraDefoc
 
 		if MultithreadDataCopies {
 			for i := 0; i < MultithreadedTheads; i++ {
-				go RaytraceThread(&wg, picture, SceneCopies[i], CameraCopies[i], MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, itx, 0, itx + wtx, ny)
+				go RaytraceThread(&wg, picture, SceneCopies[i], CameraCopies[i], MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, itx, 0, itx+wtx, ny)
 				itx += wtx
 			}
 		} else {
 			for i := 0; i < MultithreadedTheads; i++ {
-				go RaytraceThread(&wg, picture, scene, camera, MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, itx, 0, itx + wtx, ny)
+				go RaytraceThread(&wg, picture, scene, camera, MaxDepth, TemporalFilter, Antialiasing, size.X, size.Y, itx, 0, itx+wtx, ny)
 				itx += wtx
 			}
 		}
@@ -281,6 +283,7 @@ func Render(bounds pixel.Rect, scene *geometry.Scene, camera *camera.CameraDefoc
 // Ray trace the picture in a thread and write it to the output object.
 // The result is written to the picture object passed as argument.
 // This method is intended to be called multiple threads.
+//
 //go:norace
 func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *geometry.Scene, camera *camera.CameraDefocus, depth int64, jitter bool, antialiasing bool, width float64, height float64, ix int, iy int, nx int, ny int) {
 	for j := iy; j < ny; j++ {
@@ -321,7 +324,7 @@ func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *geome
 			color.MulScalar(255)
 
 			//Write to picture
-			var index = picture.Index(pixel.Vec{X:float64(i), Y:float64(j)})
+			var index = picture.Index(pixel.Vec{X: float64(i), Y: float64(j)})
 			picture.Pix[index].R = uint8(color.X)
 			picture.Pix[index].G = uint8(color.Y)
 			picture.Pix[index].B = uint8(color.Z)
@@ -334,6 +337,7 @@ func RaytraceThread(wg *sync.WaitGroup, picture *pixel.PictureData, scene *geome
 // Render the scene to calculate the color for a ray.
 // Receives the scene and the initial ray to be casted.
 // It is called recursively until the ray does not hit anything, it is absorbed of depth reaches 0.
+//
 //go:norace
 func RaytraceScene(scene *geometry.Scene, ray *vmath.Ray, depth int64) *vmath.Vector3 {
 	var hitRecord = material.NewHitRecord()
@@ -345,7 +349,7 @@ func RaytraceScene(scene *geometry.Scene, ray *vmath.Ray, depth int64) *vmath.Ve
 
 		if depth > 0 && hitRecord.Material.Scatter(ray, hitRecord, attenuation, scattered) {
 			var color = attenuation.Clone()
-			color.Mul(RaytraceScene(scene, scattered.Clone(), depth - 1))
+			color.Mul(RaytraceScene(scene, scattered.Clone(), depth-1))
 			return color
 		} else {
 			// Ray was absorved return black
@@ -363,6 +367,7 @@ func RaytraceScene(scene *geometry.Scene, ray *vmath.Ray, depth int64) *vmath.Ve
 
 // Calculate the background color from ray.
 // This method is used for multi threading.
+//
 //go:norace
 func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
 	var unitDirection = r.Direction.UnitVector()
@@ -380,6 +385,7 @@ func BackgroundColor(r *vmath.Ray) *vmath.Vector3 {
 }
 
 // Load obj file triangle into the scene.
+//
 //go:norace
 func LoadOBJ(scene *geometry.Scene, fname string, material material.Material) {
 	var file, _ = os.Open(fname)
@@ -399,6 +405,7 @@ func LoadOBJ(scene *geometry.Scene, fname string, material material.Material) {
 }
 
 // Write the frame to a PPM file string.
+//
 //go:norace
 func WritePPM(picture *pixel.PictureData, fname string) {
 	var size = picture.Rect.Size()
@@ -414,7 +421,7 @@ func WritePPM(picture *pixel.PictureData, fname string) {
 	for j := 0; j < ny; j++ {
 		for i := 0; i < nx; i++ {
 			//Write to file
-			var index = picture.Index(pixel.Vec{X:float64(i), Y:float64(j)})
+			var index = picture.Index(pixel.Vec{X: float64(i), Y: float64(j)})
 			_, _ = file.WriteString(strconv.Itoa(int(picture.Pix[index].R)) + " " + strconv.Itoa(int(picture.Pix[index].G)) + " " + strconv.Itoa(int(picture.Pix[index].B)) + "\n")
 		}
 	}
@@ -424,7 +431,8 @@ func WritePPM(picture *pixel.PictureData, fname string) {
 	_ = file.Close()
 }
 
-//CheckError an error.
+// CheckError an error.
+//
 //go:norace
 func CheckError(e error) {
 	if e != nil {

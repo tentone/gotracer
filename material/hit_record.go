@@ -8,13 +8,13 @@ import (
 type HitRecord struct {
 	// Distance from the ray origin.
 	T float64
-	
+
 	// Point of collision.
 	P *vmath.Vector3
 
 	// Normal of the surface where the ray collided.
 	Normal *vmath.Vector3
-	
+
 	// Material in the surface where the ray collided.
 	Material Material
 }

@@ -17,7 +17,7 @@ type DieletricMaterial struct {
 	Albedo *vmath.Vector3
 }
 
-func NewDieletricMaterial (refractiveIndice float64, albedo *vmath.Vector3) *DieletricMaterial  {
+func NewDieletricMaterial(refractiveIndice float64, albedo *vmath.Vector3) *DieletricMaterial {
 	var m = new(DieletricMaterial)
 	m.RefractiveIndice = refractiveIndice
 	m.Albedo = albedo

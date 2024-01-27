@@ -3,9 +3,10 @@ package camera
 import "C"
 
 import (
-	"github.com/faiface/pixel"
 	"gotracer/vmath"
 	"math"
+
+	"github.com/gopxl/pixel/v2"
 )
 
 // Camera defocus is a camera that has support for defocus blur.
@@ -27,7 +28,7 @@ type CameraDefocus struct {
 }
 
 // Create camera from bouding box
-func NewCameraDefocus (bounds pixel.Rect, position *vmath.Vector3, lookAt *vmath.Vector3, up *vmath.Vector3, fov float64, aperture float64, focusDistance float64) *CameraDefocus {
+func NewCameraDefocus(bounds pixel.Rect, position *vmath.Vector3, lookAt *vmath.Vector3, up *vmath.Vector3, fov float64, aperture float64, focusDistance float64) *CameraDefocus {
 	var c = new(CameraDefocus)
 	var size = bounds.Size()
 

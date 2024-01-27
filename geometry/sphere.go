@@ -34,8 +34,8 @@ func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *mate
 
 	var a = vmath.Dot(ray.Direction, ray.Direction)
 	var b = vmath.Dot(oc, ray.Direction)
-	var c = vmath.Dot(oc, oc) - s.Radius * s.Radius
-	var discriminant = b * b - a * c
+	var c = vmath.Dot(oc, oc) - s.Radius*s.Radius
+	var discriminant = b*b - a*c
 
 	if discriminant > 0 {
 
@@ -64,7 +64,7 @@ func (s *Sphere) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRecord *mate
 			hitRecord.Material = s.Material
 			return true
 		}
-		
+
 	}
 
 	return false

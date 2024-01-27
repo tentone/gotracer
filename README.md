@@ -66,7 +66,7 @@
     - http://win-builds.org/doku.php.
     - Add the winbuils/bin folder to the path.
     - Alternatively you can use MSYS2
-       - https://github.com/faiface/pixel/wiki/Building-Pixel-on-Windows
+       - https://github.com/gopxl/pixel/v2/wiki/Building-Pixel-on-Windows
  - Run go get and go build.
  - Run the executable
 
@@ -76,9 +76,9 @@
 ## Libraries
  - PixelGL
     - Used to create windows, output image and get key inputs
-    - https://godoc.org/github.com/faiface/pixel/pixelgl
-    - https://github.com/faiface/pixel/wiki/Creating-a-Window
-    - https://godoc.org/github.com/faiface/pixel#PictureData
+    - https://godoc.org/github.com/gopxl/pixel/v2/pixelgl
+    - https://github.com/gopxl/pixel/v2/wiki/Creating-a-Window
+    - https://godoc.org/github.com/gopxl/pixel/v2#PictureData
 
 
 

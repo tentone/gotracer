@@ -72,7 +72,7 @@ func (triangle *Triangle) Hit(ray *vmath.Ray, tmin float64, tmax float64, hitRec
 
 	var qvec *vmath.Vector3 = vmath.Cross(tvec, v0v1)
 	var v = vmath.Dot(ray.Direction, qvec) * invDet
-	if v < 0 || u + v > 1 {
+	if v < 0 || u+v > 1 {
 		return false
 	}
 

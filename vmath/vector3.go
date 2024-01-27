@@ -30,7 +30,7 @@ func NewEmptyVector3() *Vector3 {
 // Create new empty vector3 with values.
 func NewRandomVector3(min float64, max float64) *Vector3 {
 	var delta = max - min
-	return NewVector3(rand.Float64() * delta + min, rand.Float64() * delta + min, rand.Float64() * delta + min)
+	return NewVector3(rand.Float64()*delta+min, rand.Float64()*delta+min, rand.Float64()*delta+min)
 }
 
 // Set value of the vector.
@@ -105,7 +105,6 @@ func Reflect(v *Vector3, n *Vector3) *Vector3 {
 	return reflected
 }
 
-
 // Calculate the refracted vector of a vector relative to a normal vector.
 // This calculation is done using the snells law. Ni is the initial refractive indice and No is the out refraction indice.
 // The refractionRatio parameters is calculated from Ni/No.
@@ -113,7 +112,7 @@ func Refract(v *Vector3, normal *Vector3, refractionRatio float64, refracted *Ve
 
 	var uv = v.UnitVector()
 	var dt = Dot(uv, normal)
-	var discriminant = 1.0 - math.Pow(refractionRatio, 2) * (1 - math.Pow(dt, 2))
+	var discriminant = 1.0 - math.Pow(refractionRatio, 2)*(1-math.Pow(dt, 2))
 
 	if discriminant > 0 {
 
@@ -138,10 +137,9 @@ func Refract(v *Vector3, normal *Vector3, refractionRatio float64, refracted *Ve
 // Real glass has reflectivity that varies with angle look at a window at a steep angle and it becomes a mirror.
 // The behavior can be approximated by Christophe Schlick polynomial aproximation.
 func Schlick(cosine float64, reflectiveIndex float64) float64 {
-	var r = math.Pow((1 - reflectiveIndex) / (1 + reflectiveIndex), 2)
-	return r + (1 - r) * math.Pow(1 - cosine, 5)
+	var r = math.Pow((1-reflectiveIndex)/(1+reflectiveIndex), 2)
+	return r + (1-r)*math.Pow(1-cosine, 5)
 }
-
 
 // Calculate a random unitary vector in the surface of a sphere.
 // Get ray origins be on a disk around lookfrom rather than from a point.
@@ -149,7 +147,7 @@ func RandomInUnitDisk() *Vector3 {
 	var p = NewVector3(0, 0, 0)
 
 	for {
-		p.Set(rand.Float64() * 2.0 - 1.0, rand.Float64() * 2.0 - 1.0, 0.0)
+		p.Set(rand.Float64()*2.0-1.0, rand.Float64()*2.0-1.0, 0.0)
 
 		if Dot(p, p) < 1.0 {
 			break
@@ -164,7 +162,7 @@ func RandomInUnitSphere() *Vector3 {
 	var p = NewVector3(0, 0, 0)
 
 	for {
-		p.Set(rand.Float64() * 2.0 - 1.0, rand.Float64() * 2.0 - 1.0, rand.Float64() * 2.0 - 1.0)
+		p.Set(rand.Float64()*2.0-1.0, rand.Float64()*2.0-1.0, rand.Float64()*2.0-1.0)
 
 		if p.SquaredLength() < 1.0 {
 			break
@@ -176,12 +174,12 @@ func RandomInUnitSphere() *Vector3 {
 
 // Dot product between two vectors
 func Dot(a *Vector3, b *Vector3) float64 {
-	return a.X * b.X + a.Y * b.Y + a.Z * b.Z
+	return a.X*b.X + a.Y*b.Y + a.Z*b.Z
 }
 
 // Cross product between two vectors
 func Cross(a *Vector3, b *Vector3) *Vector3 {
-	return NewVector3(a.Y * b.Z - a.Z * b.Y, -(a.X * b.Z - a.Z * b.X), a.X * b.Y - a.Y * b.X)
+	return NewVector3(a.Y*b.Z-a.Z*b.Y, -(a.X*b.Z - a.Z*b.X), a.X*b.Y-a.Y*b.X)
 }
 
 // Return a copy of the vector
