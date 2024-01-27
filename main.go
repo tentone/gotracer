@@ -15,8 +15,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gopxl/pixel/pixelgl"
 	"github.com/gopxl/pixel/v2"
+	"github.com/gopxl/pixel/v2/pixelgl"
 	"github.com/sheenobu/go-obj/obj"
 	"golang.org/x/image/colornames"
 )
